@@ -88,7 +88,7 @@ function App() {
                 <a href="https://github.com/tiger3homs/project2" className="hover:text-blue-400 transition-colors">
                   <Github size={20} />
                 </a>
-                <a href="https://project2.demo.com" className="hover:text-blue-400 transition-colors">
+                <a href="https://tiger3homs.github.io/project2/" className="hover:text-blue-400 transition-colors">
                   <ExternalLink size={20} />
                 </a>
               </div>
