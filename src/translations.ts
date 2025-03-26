@@ -37,8 +37,8 @@ export const translations = {
       },
       project2: {
         title: "المشروع ٢",
-        description: "وصف مشروعك الثاني. اشرح ما يجعله فريدًا ومثيرًا للاهتمام.",
-        tags: ["Node.js", "Express", "MongoDB"]
+        description: "قريباً.",
+        tags: ["انتظر", "لها", "قريباً"]
       }
     },
     footer: "© ٢٠٢٤ تايغر٣هومز. تم البناء باستخدام رياكت وتيلويند"
@@ -59,8 +59,8 @@ export const translations = {
       },
       project2: {
         title: "Projekt 2",
-        description: "Beskrivning av ditt andra projekt. Förklara vad som gör det unikt och intressant.",
-        tags: ["Node.js", "Express", "MongoDB"]
+        description: "Kommer snart.",
+        tags: ["Vänta", "På", "Det"]
       }
     },
     footer: "© 2024 Tiger3Homs. Byggd med React & Tailwind CSS"
