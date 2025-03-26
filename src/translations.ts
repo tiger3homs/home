@@ -19,7 +19,7 @@ export const translations = {
         tags: ["Wait", "For", "It"]
       }
     },
-    footer: "© 2024 Tiger3Homs. Built with React & Tailwind CSS"
+    footer: "© 2025. Built and designed by Tiger3homs"
   },
   ar: {
     title: "تايغر٣هومز",
@@ -41,7 +41,7 @@ export const translations = {
         tags: ["انتظر", "لها", "قريباً"]
       }
     },
-    footer: "© ٢٠٢٤ تايغر٣هومز. تم البناء باستخدام رياكت وتيلويند"
+    footer: "© 2025. تم البناء والتصميم بواسطة Tiger3homs"
   },
   sv: {
     title: "Tiger3Homs",
@@ -63,6 +63,6 @@ export const translations = {
         tags: ["Vänta", "På", "Det"]
       }
     },
-    footer: "© 2024 Tiger3Homs. Byggd med React & Tailwind CSS"
+    footer: "© 2025. Byggd och designad av Tiger3homs"
   }
 };
