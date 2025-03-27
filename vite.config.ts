@@ -1,23 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// https://vitejs.dev/config/
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? './' : '/',
+  base: process.env.NODE_ENV === 'production' ? './' : '/', // Set the base path to match the GitHub Pages deployment
   plugins: [react()],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'ui-components': ['lucide-react']
-        }
-      }
-    },
-    minify: 'terser',
-    cssMinify: true,
-    sourcemap: false
-  },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'lucide-react']
-  }
 });
