@@ -1,6 +1,6 @@
 {
   "name": "vite-react-typescript-starter",
-  "homepage": "httpshttps://tiger3homs.github.io/home/",
+  "homepage": "https://tiger3homs.github.io/home/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,7 +15,8 @@
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.484.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
