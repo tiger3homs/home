@@ -1,11 +1,12 @@
 import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { Github, Facebook, Mail, Instagram } from 'lucide-react';
-import emailjs from 'emailjs-com'; // Import emailjs
+import emailjs from 'emailjs-com';
 import { translations } from './translations';
-import { getProjectsData } from './components/ProjectsSectionData'; // Import getProjectsData
+import { getProjectsData } from './components/ProjectsSectionData';
 import Logo from './components/Logo';
-import ServicesSection from './components/ServicesSection';
 
+// Lazy load components for better initial load performance
+const ServicesSection = lazy(() => import('./components/ServicesSection'));
 const ProjectsSection = lazy(() => import('./components/ProjectsSection'));
 const ContactSection = lazy(() => import('./components/ContactSection'));
 
@@ -13,7 +14,7 @@ type Language = 'en' | 'ar' | 'sv';
 
 function App() {
   const [lang, setLang] = useState<Language>('en');
-  const t = useMemo(() => translations[lang], [lang]); // Memoize translations
+  const t = useMemo(() => translations[lang], [lang]);
   const isRTL = lang === 'ar';
 
   const [formData, setFormData] = useState({
@@ -24,70 +25,68 @@ function App() {
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
 
-    const templateParams = {
-      from_name: formData.name,
-      from_email: formData.email,
-      message: formData.message,
-      to_email: 'tiger3homs@gmail.com',
-      name: formData.name,
-      email: formData.email,
-    };
-
     emailjs
-      .send('service_bdj14o3', 'template_2e2nikq', templateParams, 'UBLU57PsLej7OB6PR')
-      .then((response) => {
-        console.log('Email sent successfully!', response.status, response.text);
+      .send('service_bdj14o3', 'template_2e2nikq', {
+        from_name: formData.name,
+        from_email: formData.email,
+        message: formData.message,
+        to_email: 'tiger3homs@gmail.com',
+        name: formData.name,
+        email: formData.email,
+      }, 'UBLU57PsLej7OB6PR')
+      .then(() => {
         alert('Message sent successfully!');
-        setFormData({ name: '', email: '', message: '' }); // Reset form
+        setFormData({ name: '', email: '', message: '' });
       })
-      .catch((error) => {
-        console.error('Failed to send email:', error);
+      .catch(() => {
         alert('Failed to send message. Please try again.');
       });
-  };
+  }, [formData]);
 
-  const handleLangChange = (language: Language) => {
+  const handleLangChange = useCallback((language: Language) => {
     setLang(language);
-  };
+  }, []);
 
-  const projectsData = useMemo(() => getProjectsData(lang), [lang]); // Fetch projects data dynamically
+  const projectsData = useMemo(() => getProjectsData(lang), [lang]);
+
+  const LoadingFallback = <div className="flex items-center justify-center p-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+  </div>;
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Language Switcher */}
-      <div className="absolute top-4 right-4 flex gap-2">
+      <div className="fixed top-4 right-4 flex gap-2 z-50">
         <button 
           onClick={() => handleLangChange('en')} 
-          className={`px-2 py-1 rounded ${lang === 'en' ? 'bg-blue-500' : 'bg-gray-700'}`}
+          className={`px-2 py-1 rounded transition-colors ${lang === 'en' ? 'bg-blue-500' : 'bg-gray-700 hover:bg-gray-600'}`}
         >
           EN
         </button>
         <button 
           onClick={() => handleLangChange('sv')} 
-          className={`px-2 py-1 rounded ${lang === 'sv' ? 'bg-blue-500' : 'bg-gray-700'}`}
+          className={`px-2 py-1 rounded transition-colors ${lang === 'sv' ? 'bg-blue-500' : 'bg-gray-700 hover:bg-gray-600'}`}
         >
           SV
         </button>
         <button 
           onClick={() => handleLangChange('ar')} 
-          className={`px-2 py-1 rounded ${lang === 'ar' ? 'bg-blue-500' : 'bg-gray-700'} font-arabic`}
+          className={`px-2 py-1 rounded transition-colors ${lang === 'ar' ? 'bg-blue-500' : 'bg-gray-700 hover:bg-gray-600'} font-arabic`}
         >
           ع
         </button>
       </div>
 
-      {/* Hero Section */}
       <header className="container mx-auto px-4 py-16 md:py-32">
         <div className="max-w-3xl mx-auto text-center">
           <Logo />
           <h1 
-            className="text-4xl md:text-6xl font-bold mb-6" 
+            className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600" 
             style={{ pointerEvents: 'none', userSelect: 'none' }}
           >
             {t.title}
@@ -99,50 +98,46 @@ function App() {
             {t.role}
           </p>
           <div className="flex justify-center space-x-6">
-            <a href="https://github.com/tiger3homs" className="hover:text-blue-400 transition-colors">
+            <a href="https://github.com/tiger3homs" className="hover:text-blue-400 transition-colors transform hover:scale-110">
               <Github size={24} />
             </a>
-            <a href="mailto:tiger3homs@gmail.com" className="hover:text-blue-400 transition-colors">
+            <a href="mailto:tiger3homs@gmail.com" className="hover:text-blue-400 transition-colors transform hover:scale-110">
               <Mail size={24} />
             </a>
-            <a href="https://facebook.com/tiger3homs" className="hover:text-blue-400 transition-colors">
+            <a href="https://facebook.com/tiger3homs" className="hover:text-blue-400 transition-colors transform hover:scale-110">
               <Facebook size={24} />
             </a>
-            <a href="https://instagram.com/obajda.s" className="hover:text-blue-400 transition-colors">
+            <a href="https://instagram.com/obajda.s" className="hover:text-blue-400 transition-colors transform hover:scale-110">
               <Instagram size={24} />
             </a>
           </div>
         </div>
       </header>
 
-      {/* Projects Section */}
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={LoadingFallback}>
         <ProjectsSection 
           title={projectsData.title} 
           projects={projectsData.projects} 
         />
       </Suspense>
 
-      {/* About Section */}
-      <section className="container mx-auto px-4 py-16 bg-gray-800/50">
+      <section className="container mx-auto px-4 py-16 bg-gray-800/50 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-8">{t.about.title}</h2>
+          <h2 className="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">{t.about.title}</h2>
           <p className="text-gray-300 text-lg leading-relaxed">
             {t.about.description}
           </p>
         </div>
       </section>
 
-      {/* Services Section */}
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={LoadingFallback}>
         <ServicesSection 
           title={t.services.title} 
           services={t.services.list} 
         />
       </Suspense>
 
-      {/* Contact Section */}
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={LoadingFallback}>
         <ContactSection
           t={t.contact}
           handleSubmit={handleSubmit}
@@ -151,7 +146,6 @@ function App() {
         />
       </Suspense>
 
-      {/* Footer */}
       <footer className="container mx-auto px-4 py-8 text-center text-gray-400">
         <p>{t.footer}</p>
       </footer>
