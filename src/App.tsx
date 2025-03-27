@@ -1,17 +1,18 @@
-
-import { useState } from 'react';
+import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { Github, Facebook, Mail, Instagram } from 'lucide-react';
 import emailjs from 'emailjs-com'; // Import emailjs
+import debounce from 'lodash.debounce';
 import { translations } from './translations';
 import Logo from './components/Logo';
-import ProjectsSection from './components/ProjectsSection';
-import ContactSection from './components/ContactSection'; // Import ContactSection
+
+const ProjectsSection = lazy(() => import('./components/ProjectsSection'));
+const ContactSection = lazy(() => import('./components/ContactSection'));
 
 type Language = 'en' | 'ar' | 'sv';
 
 function App() {
   const [lang, setLang] = useState<Language>('en');
-  const t = translations[lang];
+  const t = useMemo(() => translations[lang], [lang]); // Memoize translations
   const isRTL = lang === 'ar';
 
   const [formData, setFormData] = useState({
@@ -20,10 +21,13 @@ function App() {
     message: '',
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleInputChange = useCallback(
+    debounce((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }, 300), // Adjust debounce delay as needed
+    []
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,24 +54,28 @@ function App() {
       });
   };
 
+  const handleLangChange = (language: Language) => {
+    setLang(language);
+  };
+
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 flex gap-2">
         <button 
-          onClick={() => setLang('en')} 
+          onClick={() => handleLangChange('en')} 
           className={`px-2 py-1 rounded ${lang === 'en' ? 'bg-blue-500' : 'bg-gray-700'}`}
         >
           EN
         </button>
         <button 
-          onClick={() => setLang('sv')} 
+          onClick={() => handleLangChange('sv')} 
           className={`px-2 py-1 rounded ${lang === 'sv' ? 'bg-blue-500' : 'bg-gray-700'}`}
         >
           SV
         </button>
         <button 
-          onClick={() => setLang('ar')} 
+          onClick={() => handleLangChange('ar')} 
           className={`px-2 py-1 rounded ${lang === 'ar' ? 'bg-blue-500' : 'bg-gray-700'} font-arabic`}
         >
           ع
@@ -108,27 +116,27 @@ function App() {
       </header>
 
       {/* Projects Section */}
-      <ProjectsSection 
-        title={t.projects.title} 
-        projects={[
-          {
-            title: t.projects.project1.title,
-            description: t.projects.project1.description,
-            tags: t.projects.project1.tags,
-            githubLink: "https://github.com/tiger3homs/project1",
-            liveLink: "https://tiger3homs.github.io/project1/"
-          },
-          {
-            title: t.projects.project2.title,
-            description: t.projects.project2.description,
-            tags: t.projects.project2.tags,
-            githubLink: "https://github.com/tiger3homs/project2",
-            liveLink: "https://tiger3homs.github.io/project2/"
-          }
-        ]}
-      />
-
-      
+      <Suspense fallback={<div>Loading...</div>}>
+        <ProjectsSection 
+          title={t.projects.title} 
+          projects={[
+            {
+              title: t.projects.project1.title,
+              description: t.projects.project1.description,
+              tags: t.projects.project1.tags,
+              githubLink: "https://github.com/tiger3homs/project1",
+              liveLink: "https://tiger3homs.github.io/project1/"
+            },
+            {
+              title: t.projects.project2.title,
+              description: t.projects.project2.description,
+              tags: t.projects.project2.tags,
+              githubLink: "https://github.com/tiger3homs/project2",
+              liveLink: "https://tiger3homs.github.io/project2/"
+            }
+          ]}
+        />
+      </Suspense>
 
       {/* About Section */}
       <section className="container mx-auto px-4 py-16 bg-gray-800/50">
@@ -140,8 +148,15 @@ function App() {
         </div>
       </section>
 
-{/* Contact Section */}
-<ContactSection t={t.contact} handleSubmit={handleSubmit} formData={formData} handleInputChange={handleInputChange} />
+      {/* Contact Section */}
+      <Suspense fallback={<div>Loading...</div>}>
+        <ContactSection 
+          t={t.contact} 
+          handleSubmit={handleSubmit} 
+          formData={formData} 
+          handleInputChange={handleInputChange} 
+        />
+      </Suspense>
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 text-center text-gray-400">
