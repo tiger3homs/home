@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Github, Facebook, Mail, Instagram, ExternalLink, Code2 } from 'lucide-react';
+import { Github, Facebook, Mail, Instagram } from 'lucide-react';
 import { translations } from './translations';
+import Logo from './components/Logo';
+import ProjectsSection from './components/ProjectsSection';
 
 type Language = 'en' | 'ar' | 'sv';
 
@@ -37,13 +39,7 @@ function App() {
       {/* Hero Section */}
       <header className="container mx-auto px-4 py-16 md:py-32">
         <div className="max-w-3xl mx-auto text-center">
-          {/* Logo */}
-          <img 
-            src="https://raw.githubusercontent.com/tiger3homs/home/refs/heads/main/public/logo.png" 
-            alt="Logo" 
-            className="mx-auto mb-6 w-24 h-24"
-            style={{ pointerEvents: 'none', userSelect: 'none' }}
-          />
+          <Logo />
           <h1 className="text-4xl md:text-6xl font-bold mb-6">{t.title}</h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-8">{t.role}</p>
           <div className="flex justify-center space-x-6">
@@ -64,52 +60,25 @@ function App() {
       </header>
 
       {/* Projects Section */}
-      <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12">{t.projects.title}</h2>
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors">
-            <div className="flex justify-between items-start mb-4">
-              <Code2 className="text-blue-400" size={24} />
-              <div className="flex space-x-4">
-                <a href="https://github.com/tiger3homs/project1" className="hover:text-blue-400 transition-colors">
-                  <Github size={20} />
-                </a>
-                <a href="https://tiger3homs.github.io/project1/" className="hover:text-blue-400 transition-colors">
-                  <ExternalLink size={20} />
-                </a>
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">{t.projects.project1.title}</h3>
-            <p className="text-gray-400">{t.projects.project1.description}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {t.projects.project1.tags.map((tag, index) => (
-                <span key={index} className="px-3 py-1 bg-blue-900 rounded-full text-sm">{tag}</span>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors">
-            <div className="flex justify-between items-start mb-4">
-              <Code2 className="text-blue-400" size={24} />
-              <div className="flex space-x-4">
-                <a href="https://github.com/tiger3homs/project2" className="hover:text-blue-400 transition-colors">
-                  <Github size={20} />
-                </a>
-                <a href="https://tiger3homs.github.io/project2/" className="hover:text-blue-400 transition-colors">
-                  <ExternalLink size={20} />
-                </a>
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">{t.projects.project2.title}</h3>
-            <p className="text-gray-400">{t.projects.project2.description}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {t.projects.project2.tags.map((tag, index) => (
-                <span key={index} className="px-3 py-1 bg-blue-900 rounded-full text-sm">{tag}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <ProjectsSection 
+        title={t.projects.title} 
+        projects={[
+          {
+            title: t.projects.project1.title,
+            description: t.projects.project1.description,
+            tags: t.projects.project1.tags,
+            githubLink: "https://github.com/tiger3homs/project1",
+            liveLink: "https://tiger3homs.github.io/project1/"
+          },
+          {
+            title: t.projects.project2.title,
+            description: t.projects.project2.description,
+            tags: t.projects.project2.tags,
+            githubLink: "https://github.com/tiger3homs/project2",
+            liveLink: "https://tiger3homs.github.io/project2/"
+          }
+        ]}
+      />
 
       {/* About Section */}
       <section className="container mx-auto px-4 py-16 bg-gray-800/50">
