@@ -17,6 +17,11 @@ export const translations = {
         title: "Project 2",
         description: "Coming soon.",
         tags: ["Wait", "For", "It"]
+      },
+      project3: {
+        title: "New Project",
+        description: "This is a new project description.",
+        tags: ["New", "Exciting", "Innovative"]
       }
     },
     contact: {
@@ -49,6 +54,11 @@ export const translations = {
         title: "المشروع ٢",
         description: "قريباً.",
         tags: ["انتظر", "لها", "قريباً"]
+      },
+      project3: {
+        title: "مشروع جديد",
+        description: "هذا وصف لمشروع جديد.",
+        tags: ["جديد", "مثير", "مبتكر"]
       }
     },
     contact: {
@@ -81,6 +91,11 @@ export const translations = {
         title: "Projekt 2",
         description: "Kommer snart.",
         tags: ["Vänta", "På", "Det"]
+      },
+      project3: {
+        title: "Nytt projekt",
+        description: "Detta är en beskrivning av ett nytt projekt.",
+        tags: ["Ny", "Spännande", "Innovativ"]
       }
     },
     contact: {
