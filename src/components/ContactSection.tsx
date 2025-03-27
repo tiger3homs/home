@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface ContactSectionProps {
@@ -36,9 +35,12 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
               id="name"
               name="name"
               value={formData.name}
-              onChange={handleInputChange}
+              onChange={(e) => {
+                console.log('Name Input:', e.target.value); // Debugging log
+                handleInputChange(e);
+              }}
               placeholder={t.namePlaceholder}
-              className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full rounded-md bg-gray-600 text-white border-gray-500 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
@@ -51,9 +53,12 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
               id="email"
               name="email"
               value={formData.email}
-              onChange={handleInputChange}
+              onChange={(e) => {
+                console.log('Email Input:', e.target.value); // Debugging log
+                handleInputChange(e);
+              }}
               placeholder={t.emailPlaceholder}
-              className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full rounded-md bg-gray-600 text-white border-gray-500 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
@@ -65,9 +70,12 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
               id="message"
               name="message"
               value={formData.message}
-              onChange={handleInputChange}
+              onChange={(e) => {
+                console.log('Message Input:', e.target.value); // Debugging log
+                handleInputChange(e);
+              }}
               placeholder={t.messagePlaceholder}
-              className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full rounded-md bg-gray-600 text-white border-gray-500 focus:ring-blue-500 focus:border-blue-500"
               rows={4}
               required
             />

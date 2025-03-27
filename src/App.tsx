@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { Github, Facebook, Mail, Instagram } from 'lucide-react';
 import emailjs from 'emailjs-com'; // Import emailjs
-import debounce from 'lodash.debounce';
 import { translations } from './translations';
+import { getProjectsData } from './components/ProjectsSectionData'; // Import getProjectsData
 import Logo from './components/Logo';
+import ServicesSection from './components/ServicesSection';
 
 const ProjectsSection = lazy(() => import('./components/ProjectsSection'));
 const ContactSection = lazy(() => import('./components/ContactSection'));
@@ -21,13 +22,10 @@ function App() {
     message: '',
   });
 
-  const handleInputChange = useCallback(
-    debounce((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }, 300), // Adjust debounce delay as needed
-    []
-  );
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +56,8 @@ function App() {
     setLang(language);
   };
 
+  const projectsData = useMemo(() => getProjectsData(lang), [lang]); // Fetch projects data dynamically
+
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Language Switcher */}
@@ -87,17 +87,17 @@ function App() {
         <div className="max-w-3xl mx-auto text-center">
           <Logo />
           <h1 
-  className="text-4xl md:text-6xl font-bold mb-6" 
-  style={{ pointerEvents: 'none', userSelect: 'none' }}
->
-  {t.title}
-</h1>
-<p 
-  className="text-xl md:text-2xl text-gray-300 mb-8" 
-  style={{ pointerEvents: 'none', userSelect: 'none' }}
->
-  {t.role}
-</p>
+            className="text-4xl md:text-6xl font-bold mb-6" 
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
+          >
+            {t.title}
+          </h1>
+          <p 
+            className="text-xl md:text-2xl text-gray-300 mb-8" 
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
+          >
+            {t.role}
+          </p>
           <div className="flex justify-center space-x-6">
             <a href="https://github.com/tiger3homs" className="hover:text-blue-400 transition-colors">
               <Github size={24} />
@@ -118,23 +118,8 @@ function App() {
       {/* Projects Section */}
       <Suspense fallback={<div>Loading...</div>}>
         <ProjectsSection 
-          title={t.projects.title} 
-          projects={[
-            {
-              title: t.projects.project1.title,
-              description: t.projects.project1.description,
-              tags: t.projects.project1.tags,
-              githubLink: "https://github.com/tiger3homs/project1",
-              liveLink: "https://tiger3homs.github.io/project1/"
-            },
-            {
-              title: t.projects.project2.title,
-              description: t.projects.project2.description,
-              tags: t.projects.project2.tags,
-              githubLink: "https://github.com/tiger3homs/project2",
-              liveLink: "https://tiger3homs.github.io/project2/"
-            }
-          ]}
+          title={projectsData.title} 
+          projects={projectsData.projects} 
         />
       </Suspense>
 
@@ -148,13 +133,21 @@ function App() {
         </div>
       </section>
 
+      {/* Services Section */}
+      <Suspense fallback={<div>Loading...</div>}>
+        <ServicesSection 
+          title={t.services.title} 
+          services={t.services.list} 
+        />
+      </Suspense>
+
       {/* Contact Section */}
       <Suspense fallback={<div>Loading...</div>}>
-        <ContactSection 
-          t={t.contact} 
-          handleSubmit={handleSubmit} 
-          formData={formData} 
-          handleInputChange={handleInputChange} 
+        <ContactSection
+          t={t.contact}
+          handleSubmit={handleSubmit}
+          formData={formData}
+          handleInputChange={handleInputChange}
         />
       </Suspense>
 

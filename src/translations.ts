@@ -35,6 +35,15 @@ export const translations = {
       submitButton: "Send Message",
     },
     footer: "© 2025. Built and designed by Tiger3homs",
+    services: {
+      title: "Services",
+      list: [
+        { title: "Web Development", description: "Building modern, responsive websites tailored to your needs." },
+        { title: "UI/UX Design", description: "Crafting user-friendly and visually appealing designs." },
+        { title: "SEO Optimization", description: "Improving your website's visibility on search engines." },
+        { title: "Consulting", description: "Providing expert advice to help you achieve your goals." },
+      ],
+    },
   },
   ar: {
     title: "تايغر٣هومز",
@@ -72,6 +81,15 @@ export const translations = {
       submitButton: "إرسال الرسالة",
     },
     footer: "© 2025. تم الإنشاء والتصميم بواسطة تايغر٣هومز",
+    services: {
+      title: "الخدمات",
+      list: [
+        { title: "تطوير الويب", description: "بناء مواقع حديثة ومتجاوبة تلبي احتياجاتك." },
+        { title: "تصميم واجهات المستخدم", description: "تصميمات سهلة الاستخدام وجذابة بصريًا." },
+        { title: "تحسين محركات البحث", description: "تحسين ظهور موقعك على محركات البحث." },
+        { title: "الاستشارات", description: "تقديم نصائح خبراء لمساعدتك في تحقيق أهدافك." },
+      ],
+    },
   },
   sv: {
     title: "Tiger3Homs",
@@ -109,5 +127,14 @@ export const translations = {
       submitButton: "Skicka meddelande",
     },
     footer: "© 2025. Byggd och designad av Tiger3Homs",
+    services: {
+      title: "Tjänster",
+      list: [
+        { title: "Webbutveckling", description: "Bygger moderna, responsiva webbplatser anpassade efter dina behov." },
+        { title: "UI/UX-design", description: "Skapar användarvänliga och visuellt tilltalande designer." },
+        { title: "SEO-optimering", description: "Förbättrar din webbplats synlighet på sökmotorer." },
+        { title: "Konsultation", description: "Erbjuder expertråd för att hjälpa dig nå dina mål." },
+      ],
+    },
   },
 };
