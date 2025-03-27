@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Github, Facebook, Mail, Instagram, ExternalLink, Code2, Languages } from 'lucide-react';
+import { useState } from 'react';
+import { Github, Facebook, Mail, Instagram, ExternalLink, Code2 } from 'lucide-react';
 import { translations } from './translations';
 
 type Language = 'en' | 'ar' | 'sv';
@@ -37,6 +37,13 @@ function App() {
       {/* Hero Section */}
       <header className="container mx-auto px-4 py-16 md:py-32">
         <div className="max-w-3xl mx-auto text-center">
+          {/* Logo */}
+          <img 
+            src="https://raw.githubusercontent.com/tiger3homs/home/refs/heads/main/public/logo.png" 
+            alt="Logo" 
+            className="mx-auto mb-6 w-24 h-24"
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
+          />
           <h1 className="text-4xl md:text-6xl font-bold mb-6">{t.title}</h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-8">{t.role}</p>
           <div className="flex justify-center space-x-6">
