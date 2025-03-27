@@ -1,16 +1,54 @@
+
 import { useState } from 'react';
 import { Github, Facebook, Mail, Instagram } from 'lucide-react';
+import emailjs from 'emailjs-com'; // Import emailjs
 import { translations } from './translations';
 import Logo from './components/Logo';
 import ProjectsSection from './components/ProjectsSection';
+import ContactSection from './components/ContactSection'; // Import ContactSection
 
 type Language = 'en' | 'ar' | 'sv';
 
 function App() {
   const [lang, setLang] = useState<Language>('en');
   const t = translations[lang];
-
   const isRTL = lang === 'ar';
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const templateParams = {
+      from_name: formData.name,
+      from_email: formData.email,
+      message: formData.message,
+      to_email: 'tiger3homs@gmail.com',
+      name: formData.name,
+      email: formData.email,
+    };
+
+    emailjs
+      .send('service_bdj14o3', 'template_2e2nikq', templateParams, 'UBLU57PsLej7OB6PR')
+      .then((response) => {
+        console.log('Email sent successfully!', response.status, response.text);
+        alert('Message sent successfully!');
+        setFormData({ name: '', email: '', message: '' }); // Reset form
+      })
+      .catch((error) => {
+        console.error('Failed to send email:', error);
+        alert('Failed to send message. Please try again.');
+      });
+  };
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ${isRTL ? 'rtl' : 'ltr'}`}>
@@ -40,8 +78,18 @@ function App() {
       <header className="container mx-auto px-4 py-16 md:py-32">
         <div className="max-w-3xl mx-auto text-center">
           <Logo />
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">{t.title}</h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-8">{t.role}</p>
+          <h1 
+  className="text-4xl md:text-6xl font-bold mb-6" 
+  style={{ pointerEvents: 'none', userSelect: 'none' }}
+>
+  {t.title}
+</h1>
+<p 
+  className="text-xl md:text-2xl text-gray-300 mb-8" 
+  style={{ pointerEvents: 'none', userSelect: 'none' }}
+>
+  {t.role}
+</p>
           <div className="flex justify-center space-x-6">
             <a href="https://github.com/tiger3homs" className="hover:text-blue-400 transition-colors">
               <Github size={24} />
@@ -80,6 +128,8 @@ function App() {
         ]}
       />
 
+      
+
       {/* About Section */}
       <section className="container mx-auto px-4 py-16 bg-gray-800/50">
         <div className="max-w-3xl mx-auto">
@@ -89,6 +139,9 @@ function App() {
           </p>
         </div>
       </section>
+
+{/* Contact Section */}
+<ContactSection t={t.contact} handleSubmit={handleSubmit} formData={formData} handleInputChange={handleInputChange} />
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 text-center text-gray-400">

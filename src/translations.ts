@@ -19,7 +19,17 @@ export const translations = {
         tags: ["Wait", "For", "It"]
       }
     },
-    footer: "© 2025. Built and designed by Tiger3homs"
+    contact: {
+      title: "Contact Me",
+      nameLabel: "Name",
+      namePlaceholder: "Enter your name",
+      emailLabel: "Email",
+      emailPlaceholder: "Enter your email",
+      messageLabel: "Message",
+      messagePlaceholder: "Enter your message",
+      submitButton: "Send Message",
+    },
+    footer: "© 2025. Built and designed by Tiger3homs",
   },
   ar: {
     title: "تايغر٣هومز",
@@ -41,7 +51,17 @@ export const translations = {
         tags: ["انتظر", "لها", "قريباً"]
       }
     },
-    footer: "© 2025. تم البناء والتصميم بواسطة Tiger3homs"
+    contact: {
+      title: "اتصل بي",
+      nameLabel: "الاسم",
+      namePlaceholder: "أدخل اسمك",
+      emailLabel: "البريد الإلكتروني",
+      emailPlaceholder: "أدخل بريدك الإلكتروني",
+      messageLabel: "الرسالة",
+      messagePlaceholder: "أدخل رسالتك",
+      submitButton: "إرسال الرسالة",
+    },
+    footer: "© 2025. تم الإنشاء والتصميم بواسطة تايغر٣هومز",
   },
   sv: {
     title: "Tiger3Homs",
@@ -63,6 +83,16 @@ export const translations = {
         tags: ["Vänta", "På", "Det"]
       }
     },
-    footer: "© 2025. Byggd och designad av Tiger3homs"
-  }
+    contact: {
+      title: "Kontakta mig",
+      nameLabel: "Namn",
+      namePlaceholder: "Ange ditt namn",
+      emailLabel: "E-post",
+      emailPlaceholder: "Ange din e-post",
+      messageLabel: "Meddelande",
+      messagePlaceholder: "Ange ditt meddelande",
+      submitButton: "Skicka meddelande",
+    },
+    footer: "© 2025. Byggd och designad av Tiger3Homs",
+  },
 };
