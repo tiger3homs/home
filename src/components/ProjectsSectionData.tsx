@@ -1,31 +1,33 @@
-import { translations } from '../translations';
+import { translations as defaultTranslations } from '../translations';
 
-export const getProjectsData = (lang: 'en' | 'ar' | 'sv') => {
-  const t = translations[lang];
+type TranslationsType = typeof defaultTranslations;
+type LanguageKey = keyof TranslationsType;
+
+// Update function to accept optional translations object
+export const getProjectsData = (
+  lang: LanguageKey,
+  translations: TranslationsType = defaultTranslations // Use provided translations or default
+) => {
+  const t = translations[lang]; // Use the potentially modified translations
+  const projectsData = t?.projects;
+
+  // Dynamically create the projects array from the projectsData object
+  const projectsArray = projectsData
+    ? Object.entries(projectsData)
+        .filter(([key, value]) => key !== 'title' && typeof value === 'object' && value !== null) // Filter out the title and ensure value is an object
+        .map(([key, projectDetails]: [string, any]) => ({
+          // Use key for links for now, or implement storing links in translations later
+          title: projectDetails?.title ?? `Project ${key}`,
+          description: projectDetails?.description ?? 'Description missing.',
+          tags: projectDetails?.tags ?? [],
+          // Placeholder links - ideally these would also be editable/stored
+          githubLink: `https://github.com/tiger3homs/${key}`,
+          liveLink: `https://tiger3homs.github.io/${key}/`,
+        }))
+    : []; // Default to empty array if projectsData is missing
+
   return {
-    title: t.projects.title,
-    projects: [
-      {
-        title: t.projects.project1.title,
-        description: t.projects.project1.description,
-        tags: t.projects.project1.tags,
-        githubLink: "https://github.com/tiger3homs/project1",
-        liveLink: "https://tiger3homs.github.io/project1/",
-      },
-      {
-        title: t.projects.project2.title,
-        description: t.projects.project2.description,
-        tags: t.projects.project2.tags,
-        githubLink: "https://github.com/tiger3homs/project2",
-        liveLink: "https://tiger3homs.github.io/project2/",
-      },
-      {
-        title: t.projects.project3.title, // Add project3 here
-        description: t.projects.project3.description,
-        tags: t.projects.project3.tags,
-        githubLink: "https://github.com/tiger3homs/project3",
-        liveLink: "https://tiger3homs.github.io/project3/",
-      },
-    ],
+    title: projectsData?.title ?? 'Featured Projects', // Fallback title
+    projects: projectsArray, // Use the dynamically generated array
   };
 };

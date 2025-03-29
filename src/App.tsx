@@ -1,8 +1,13 @@
-import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Github, Facebook, Mail, Instagram } from 'lucide-react';
 import emailjs from 'emailjs-com';
-import { translations } from './translations';
-import { getProjectsData } from './components/ProjectsSectionData';
+import { onAuthStateChanged, User } from 'firebase/auth'; // Import Firebase auth types
+import { auth } from './firebaseConfig'; // Import Firebase auth instance
+import { translations as defaultTranslations } from './translations';
+import LoginPage from './admin/LoginPage';
+import AdminDashboard from './admin/AdminDashboard';
+import { getProjectsData as defaultGetProjectsData } from './components/ProjectsSectionData';
 import Logo from './components/Logo';
 
 // Lazy load components for better initial load performance
@@ -10,11 +15,80 @@ const ServicesSection = lazy(() => import('./components/ServicesSection'));
 const ProjectsSection = lazy(() => import('./components/ProjectsSection'));
 const ContactSection = lazy(() => import('./components/ContactSection'));
 
-type Language = 'en' | 'ar' | 'sv';
+type TranslationsType = typeof defaultTranslations;
+type Language = keyof TranslationsType;
 
-function App() {
+// Secure Protected Route Component using Firebase Auth State
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    // Optional: Show a loading spinner while checking auth state
+    return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div></div>;
+  }
+
+  if (!user) {
+    // User is not logged in, redirect to login page
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  // User is logged in, render the protected component
+  return children;
+};
+
+
+// Main Site Layout Component (extracted from original App)
+const MainSite = () => {
+  // State for current language
   const [lang, setLang] = useState<Language>('en');
-  const t = useMemo(() => translations[lang], [lang]);
+  // State to hold the active translations (from localStorage or defaults)
+  const [siteTranslations, setSiteTranslations] = useState<TranslationsType>(() => {
+      const saved = localStorage.getItem('siteTranslations');
+      try {
+          return saved ? JSON.parse(saved) : defaultTranslations;
+      } catch (e) {
+          console.error("Failed to parse translations from localStorage on main site", e);
+          return defaultTranslations;
+      }
+  });
+
+  // Update translations if localStorage changes (e.g., after saving in admin)
+  // This requires a manual refresh or more complex state management (like Context API)
+  // for real-time updates without refresh. For now, it loads on initial mount.
+  useEffect(() => {
+      const handleStorageChange = () => {
+          const saved = localStorage.getItem('siteTranslations');
+           try {
+              setSiteTranslations(saved ? JSON.parse(saved) : defaultTranslations);
+          } catch (e) {
+              console.error("Failed to parse translations from localStorage on storage event", e);
+              setSiteTranslations(defaultTranslations); // Fallback on error
+          }
+      };
+
+      window.addEventListener('storage', handleStorageChange);
+      // Initial load check in case storage changed before listener attached
+      handleStorageChange();
+
+      return () => {
+          window.removeEventListener('storage', handleStorageChange);
+      };
+  }, []);
+
+
+  // Memoized translation object for the current language
+  const t = useMemo(() => siteTranslations[lang], [lang, siteTranslations]);
   const isRTL = lang === 'ar';
 
   const [formData, setFormData] = useState({
@@ -53,7 +127,8 @@ function App() {
     setLang(language);
   }, []);
 
-  const projectsData = useMemo(() => getProjectsData(lang), [lang]);
+  // Use the active translations for project data
+  const projectsData = useMemo(() => defaultGetProjectsData(lang, siteTranslations), [lang, siteTranslations]);
 
   const LoadingFallback = <div className="flex items-center justify-center p-8">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -61,8 +136,9 @@ function App() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ${isRTL ? 'rtl' : 'ltr'}`}>
+      {/* Language switcher remains visible on the main site */}
       <div className="fixed top-4 right-4 flex gap-2 z-50">
-        <button 
+        <button
           onClick={() => handleLangChange('en')} 
           className={`px-2 py-1 rounded transition-colors ${lang === 'en' ? 'bg-blue-500' : 'bg-gray-700 hover:bg-gray-600'}`}
         >
@@ -150,6 +226,34 @@ function App() {
         <p>{t.footer}</p>
       </footer>
     </div>
+  );
+};
+
+// Main App component with Router
+function App() {
+  // Set basename conditionally based on environment
+  // Use '/home' for production builds (GitHub Pages), '/' for development
+  const basename = import.meta.env.PROD ? '/home' : '/';
+
+  return (
+    <BrowserRouter basename={basename}>
+      <Routes>
+        {/* Routes now work correctly in both dev and prod */}
+        <Route path="/" element={<MainSite />} />
+        <Route path="/admin/login" element={<LoginPage />} />
+        <Route 
+          path="/admin/dashboard" 
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        {/* Optional: Redirect /admin to login if not authenticated, or dashboard if authenticated */}
+        {/* This could also be handled within ProtectedRoute or LoginPage logic */}
+         <Route path="/admin" element={<Navigate to="/admin/login" replace />} /> 
+      </Routes>
+    </BrowserRouter>
   );
 }
 
