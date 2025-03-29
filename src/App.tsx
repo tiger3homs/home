@@ -247,8 +247,8 @@ const RedirectHandler = () => {
       // The path from sessionStorage includes the basename (e.g., /home/admin/login)
       // We need to remove the basename before passing it to navigate()
       const basename = import.meta.env.PROD ? '/home' : '/';
-      const relativePath = redirectPath.startsWith(basename) 
-        ? redirectPath.substring(basename.length -1) // Keep leading slash if basename is '/'
+      const relativePath = redirectPath.startsWith(basename)
+        ? redirectPath.substring(basename.length) // Correctly remove the basename
         : redirectPath;
 
       // Ensure relativePath starts with a '/' if it's not empty
