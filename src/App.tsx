@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'; // Import Link
+import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom'; // Import Link and useNavigate
 import { Github, Facebook, Mail, Instagram } from 'lucide-react';
 import emailjs from 'emailjs-com';
 import { onAuthStateChanged, User } from 'firebase/auth'; // Import Firebase auth types
@@ -235,6 +235,34 @@ const MainSite = () => {
   );
 };
 
+// Component to handle the redirect logic from 404.html
+const RedirectHandler = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const redirectPath = sessionStorage.getItem('redirect');
+    if (redirectPath) {
+      sessionStorage.removeItem('redirect');
+      // Adjust the path based on the basename.
+      // The path from sessionStorage includes the basename (e.g., /home/admin/login)
+      // We need to remove the basename before passing it to navigate()
+      const basename = import.meta.env.PROD ? '/home' : '/';
+      const relativePath = redirectPath.startsWith(basename) 
+        ? redirectPath.substring(basename.length -1) // Keep leading slash if basename is '/'
+        : redirectPath;
+
+      // Ensure relativePath starts with a '/' if it's not empty
+      const navigateTo = (relativePath === '' || relativePath === '/') ? '/' : (relativePath.startsWith('/') ? relativePath : '/' + relativePath);
+      
+      console.log(`Redirecting from sessionStorage: ${redirectPath} to ${navigateTo}`); // Debug log
+      navigate(navigateTo, { replace: true });
+    }
+  }, [navigate]); // Dependency array includes navigate
+
+  return null; // This component doesn't render anything
+};
+
+
 // Main App component with Router
 function App() {
   // Set basename conditionally based on environment
@@ -243,6 +271,8 @@ function App() {
 
   return (
     <BrowserRouter basename={basename}>
+      {/* Add the RedirectHandler inside the Router */}
+      <RedirectHandler /> 
       <Routes>
         {/* Routes now work correctly in both dev and prod */}
         <Route path="/" element={<MainSite />} />
