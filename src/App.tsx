@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'; // Import Link
 import { Github, Facebook, Mail, Instagram } from 'lucide-react';
 import emailjs from 'emailjs-com';
 import { onAuthStateChanged, User } from 'firebase/auth'; // Import Firebase auth types
@@ -224,6 +224,12 @@ const MainSite = () => {
 
       <footer className="container mx-auto px-4 py-8 text-center text-gray-400">
         <p>{t.footer}</p>
+        {/* Add Admin Link */}
+        <div className="mt-4">
+          <Link to="/admin/dashboard" className="text-sm text-gray-500 hover:text-blue-400 transition-colors">
+            Admin Dashboard
+          </Link>
+        </div>
       </footer>
     </div>
   );
