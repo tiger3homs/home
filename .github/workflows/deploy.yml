@@ -1,36 +1,35 @@
-name: GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - main
-  pull_request:
+      - main # Or your default branch
 
 jobs:
-  deploy:
-    runs-on: ubuntu-22.04
+  build-and-deploy:
+    runs-on: ubuntu-latest
     permissions:
-      contents: write
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-    steps:
-      - uses: actions/checkout@v4
+      contents: write # Allow the action to write to the gh-pages branch
 
-      - name: Setup Node
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ⚙️
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20' # Use a current LTS version
 
-      - name: Install Dependencies
+      - name: Install dependencies 📦
         run: npm install
 
-      - name: Build Project
+      - name: Build project 🏗️
         run: npm run build
+        env:
+          NODE_ENV: production # Ensure base path is set correctly
 
-      - name: Deploy
+      - name: Deploy to GitHub Pages 🚀
         uses: peaceiris/actions-gh-pages@v4
-        if: github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          cname: aidrivencoder.github.io
-          publish_dir: ./dist
+          publish_dir: ./dist # Deploy the contents of the dist folder
