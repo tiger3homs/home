@@ -16,7 +16,7 @@ const ProjectsSection = lazy(() => import('./components/ProjectsSection'));
 const ContactSection = lazy(() => import('./components/ContactSection'));
 
 type TranslationsType = typeof defaultTranslations;
-type Language = keyof TranslationsType;
+// Language type removed as it's no longer needed
 
 // Secure Protected Route Component using Firebase Auth State
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -50,8 +50,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Main Site Layout Component (extracted from original App)
 const MainSite = () => {
-  // State for current language
-  const [lang, setLang] = useState<Language>('en');
+  // Language state removed
   // State to hold the active translations (from localStorage or defaults)
   const [siteTranslations, setSiteTranslations] = useState<TranslationsType>(() => {
       const saved = localStorage.getItem('siteTranslations');
@@ -87,9 +86,9 @@ const MainSite = () => {
   }, []);
 
 
-  // Memoized translation object for the current language
-  const t = useMemo(() => siteTranslations[lang], [lang, siteTranslations]);
-  const isRTL = lang === 'ar';
+  // Memoized translation object - now always uses 'en'
+  const t = useMemo(() => siteTranslations.en, [siteTranslations]);
+  // isRTL removed
 
   const [formData, setFormData] = useState({
     name: '',
@@ -123,40 +122,19 @@ const MainSite = () => {
       });
   }, [formData]);
 
-  const handleLangChange = useCallback((language: Language) => {
-    setLang(language);
-  }, []);
+  // handleLangChange removed
 
-  // Use the active translations for project data
-  const projectsData = useMemo(() => defaultGetProjectsData(lang, siteTranslations), [lang, siteTranslations]);
+  // Use the active translations for project data - lang argument removed
+  const projectsData = useMemo(() => defaultGetProjectsData(siteTranslations), [siteTranslations]);
 
   const LoadingFallback = <div className="flex items-center justify-center p-8">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
   </div>;
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Language switcher remains visible on the main site */}
-      <div className="fixed top-4 right-4 flex gap-2 z-50">
-        <button
-          onClick={() => handleLangChange('en')} 
-          className={`px-2 py-1 rounded transition-colors ${lang === 'en' ? 'bg-blue-500' : 'bg-gray-700 hover:bg-gray-600'}`}
-        >
-          EN
-        </button>
-        <button 
-          onClick={() => handleLangChange('sv')} 
-          className={`px-2 py-1 rounded transition-colors ${lang === 'sv' ? 'bg-blue-500' : 'bg-gray-700 hover:bg-gray-600'}`}
-        >
-          SV
-        </button>
-        <button 
-          onClick={() => handleLangChange('ar')} 
-          className={`px-2 py-1 rounded transition-colors ${lang === 'ar' ? 'bg-blue-500' : 'bg-gray-700 hover:bg-gray-600'} font-arabic`}
-        >
-          ع
-        </button>
-      </div>
+    // isRTL class removed
+    <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ltr`}>
+      {/* Language switcher removed */}
 
       <header className="container mx-auto px-4 py-16 md:py-32">
         <div className="max-w-3xl mx-auto text-center">

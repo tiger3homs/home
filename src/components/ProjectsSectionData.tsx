@@ -1,14 +1,14 @@
 import { translations as defaultTranslations } from '../translations';
 
 type TranslationsType = typeof defaultTranslations;
-type LanguageKey = keyof TranslationsType;
+// No longer need LanguageKey as we only use 'en'
 
-// Update function to accept optional translations object
+// Update function to accept optional translations object, lang parameter removed
 export const getProjectsData = (
-  lang: LanguageKey,
   translations: TranslationsType = defaultTranslations // Use provided translations or default
 ) => {
-  const t = translations[lang]; // Use the potentially modified translations
+  // Directly access the 'en' translations
+  const t = translations.en;
   const projectsData = t?.projects;
 
   // Dynamically create the projects array from the projectsData object

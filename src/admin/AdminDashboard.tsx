@@ -5,7 +5,8 @@ import { auth } from '../firebaseConfig'; // Firebase auth instance
 import { translations as defaultTranslations } from '../translations'; // Import default data
 
 type TranslationsType = typeof defaultTranslations;
-type LanguageKey = keyof TranslationsType;
+// LanguageKey type is no longer strictly necessary as we only use 'en', but keep for structure consistency for now.
+type LanguageKey = 'en'; // Explicitly set to 'en'
 
 // Define a template for a new project
 const newProjectTemplate = {
@@ -19,18 +20,19 @@ const renderFields = (
     data: any,
     path: (string | number)[],
     handleChange: (path: (string | number)[], value: string) => void,
-    handleAddProject?: (lang: LanguageKey) => void // Optional callback for adding projects
+    handleAddProject?: () => void // Optional callback for adding projects - lang removed
     ) => {
   // Special handling for the main 'projects' object to add the "Add Project" button
-  if (path.length === 2 && path[1] === 'projects' && typeof data === 'object' && data !== null && !Array.isArray(data)) {
-      const lang = path[0] as LanguageKey;
+  // Path check adjusted as it no longer starts with language key
+  if (path.length === 1 && path[0] === 'projects' && typeof data === 'object' && data !== null && !Array.isArray(data)) {
+      // const lang = path[0] as LanguageKey; // lang removed
       return (
           <div key={path.join('.')} className="mb-6 p-4 border border-gray-200 rounded">
               <div className="flex justify-between items-center mb-3">
-                 <h4 className="text-lg font-semibold capitalize">{String(path[1]).replace(/([A-Z])/g, ' $1')}</h4>
+                 <h4 className="text-lg font-semibold capitalize">{String(path[0]).replace(/([A-Z])/g, ' $1')}</h4> {/* Use path[0] */}
                  {handleAddProject && (
                       <button
-                          onClick={() => handleAddProject(lang)}
+                          onClick={handleAddProject} // Call without lang
                           className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline"
                       >
                           + Add Project
@@ -46,7 +48,8 @@ const renderFields = (
                       return (
                           <div key={projectPath.join('.')} className="mb-4 p-3 border border-gray-100 rounded">
                               <h5 className="text-md font-medium mb-2 capitalize">{key.replace(/([A-Z])/g, ' $1')}</h5>
-                              {renderFields(value, projectPath, handleChange)} {/* No add button needed here */}
+                              {/* Pass handleAddProject=undefined here as it's nested */}
+                              {renderFields(value, projectPath, handleChange, undefined)}
                           </div>
                       );
                   } else if (key === 'title' && typeof value === 'string') {
@@ -197,7 +200,7 @@ const AdminDashboard: React.FC = () => {
       return defaultTranslations; // Fallback to defaults if parsing fails
     }
   });
-  const [activeLang, setActiveLang] = useState<LanguageKey>('en');
+  // activeLang state removed
   const [saveStatus, setSaveStatus] = useState('');
   const [logoutError, setLogoutError] = useState(''); // State for logout errors
 
@@ -213,11 +216,11 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleInputChange = useCallback((path: (string | number)[], value: string) => {
+  const handleInputChange = useCallback((pathWithinLang: (string | number)[], value: string) => {
     setTranslations((prev: TranslationsType) => {
-      // Update the specific language being edited
-      const langToUpdate = path[0] as LanguageKey; // First element is always the language key (string)
-      const pathWithinLang = path.slice(1); // Remaining path elements (can be string or number)
+      // Always update the 'en' language
+      const langToUpdate: LanguageKey = 'en';
+      // pathWithinLang is the path starting from within the 'en' object
       const updatedLangData = updateNestedState(prev[langToUpdate], pathWithinLang, value);
       return {
         ...prev,
@@ -227,11 +230,11 @@ const AdminDashboard: React.FC = () => {
     setSaveStatus(''); // Clear status on change
   }, []);
 
-   // Function to add a new project structure to the state for a specific language
-  const handleAddNewProject = useCallback((lang: LanguageKey) => {
+   // Function to add a new project structure to the state for the 'en' language
+  const handleAddNewProject = useCallback(() => { // lang parameter removed
     setTranslations((prev: TranslationsType) => {
         const newProjectKey = `newProject_${Date.now()}`; // Unique key for the new project
-        const langData = prev[lang];
+        const langData = prev.en; // Directly use 'en'
         const updatedProjects = {
             ...langData.projects,
             [newProjectKey]: { ...newProjectTemplate } // Add the new project
@@ -242,7 +245,7 @@ const AdminDashboard: React.FC = () => {
         };
         return {
             ...prev,
-            [lang]: updatedLangData
+            en: updatedLangData // Update 'en'
         };
     });
      setSaveStatus('New project added. Edit details and save.'); // Inform user
@@ -261,10 +264,12 @@ const AdminDashboard: React.FC = () => {
   };
 
   const resetToDefaults = () => {
-    if (window.confirm('Are you sure you want to reset all content to the default values? This cannot be undone.')) {
-        setTranslations(defaultTranslations);
-        localStorage.removeItem('siteTranslations'); // Also clear storage
-        setSaveStatus('Content reset to defaults.');
+    if (window.confirm('Are you sure you want to reset the English content to the default values? This cannot be undone.')) {
+        // Reset only the 'en' part, keeping the structure
+        setTranslations({ en: defaultTranslations.en });
+        // Update localStorage accordingly
+        localStorage.setItem('siteTranslations', JSON.stringify({ en: defaultTranslations.en }));
+        setSaveStatus('English content reset to defaults.');
         setTimeout(() => setSaveStatus(''), 3000);
     }
   };
@@ -291,23 +296,14 @@ const AdminDashboard: React.FC = () => {
          {logoutError && <p className="text-red-500 text-xs italic mt-2 text-right">{logoutError}</p>}
       </div>
 
-      {/* Language Tabs */}
-      <div className="mb-6">
-        {(Object.keys(translations) as LanguageKey[]).map((lang) => ( // Assert keys as LanguageKey[]
-          <button
-            key={lang}
-            onClick={() => setActiveLang(lang)} // Now lang is correctly typed as LanguageKey
-            className={`mr-2 py-2 px-4 rounded ${activeLang === lang ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-          >
-            {lang.toUpperCase()}
-          </button>
-        ))}
-      </div>
+      {/* Language Tabs Removed */}
 
-      {/* Form Fields for Active Language */}
+      {/* Form Fields for English Language */}
       <div className="bg-white p-6 rounded shadow">
-        {/* Pass handleAddNewProject to renderFields */}
-        {renderFields(translations[activeLang], [activeLang], handleInputChange, handleAddNewProject)}
+        <h3 className="text-xl font-semibold mb-4 text-gray-700">Editing: English Content</h3>
+        {/* Pass handleAddNewProject to renderFields, render only 'en' data */}
+        {/* Initial path is now empty as renderFields operates within the 'en' object */}
+        {renderFields(translations.en, [], handleInputChange, handleAddNewProject)}
       </div>
 
        {/* Save Button and Status */}
