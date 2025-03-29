@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDZP7KXHbRl3m7qDX-_Z6n9xwYwJ-nqHXM", // Hardcode for StackBlitz demo
+  apiKey: "AIzaSyDr3k3DjPk8fNlgapY3Gge4ngXXuRifDjA",
   authDomain: "tiger3homs-f3a5f.firebaseapp.com",
   projectId: "tiger3homs-f3a5f",
   storageBucket: "tiger3homs-f3a5f.firebasestorage.app",
