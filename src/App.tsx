@@ -10,16 +10,13 @@ import AdminDashboard from './admin/AdminDashboard';
 import { getProjectsData as defaultGetProjectsData } from './components/ProjectsSectionData';
 import Logo from './components/Logo';
 
-// Lazy load components for better initial load performance
 const ServicesSection = lazy(() => import('./components/ServicesSection'));
 const ProjectsSection = lazy(() => import('./components/ProjectsSection'));
 const ContactSection = lazy(() => import('./components/ContactSection'));
 
-// Rate limiting for contact form
-const RATE_LIMIT_DURATION = 60000; // 1 minute
+const RATE_LIMIT_DURATION = 60000;
 let lastSubmissionTime = 0;
 
-// Form validation
 const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -62,32 +59,32 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const MainSite = () => {
   const [siteTranslations, setSiteTranslations] = useState<TranslationsType>(() => {
-      const saved = localStorage.getItem('siteTranslations');
-      try {
-          return saved ? JSON.parse(saved) : defaultTranslations;
-      } catch (e) {
-          console.error("Failed to parse translations from localStorage on main site", e);
-          return defaultTranslations;
-      }
+    const saved = localStorage.getItem('siteTranslations');
+    try {
+      return saved ? JSON.parse(saved) : defaultTranslations;
+    } catch (e) {
+      console.error("Failed to parse translations from localStorage on main site", e);
+      return defaultTranslations;
+    }
   });
 
   useEffect(() => {
-      const handleStorageChange = () => {
-          const saved = localStorage.getItem('siteTranslations');
-           try {
-              setSiteTranslations(saved ? JSON.parse(saved) : defaultTranslations);
-          } catch (e) {
-              console.error("Failed to parse translations from localStorage on storage event", e);
-              setSiteTranslations(defaultTranslations);
-          }
-      };
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('siteTranslations');
+      try {
+        setSiteTranslations(saved ? JSON.parse(saved) : defaultTranslations);
+      } catch (e) {
+        console.error("Failed to parse translations from localStorage on storage event", e);
+        setSiteTranslations(defaultTranslations);
+      }
+    };
 
-      window.addEventListener('storage', handleStorageChange);
-      handleStorageChange();
+    window.addEventListener('storage', handleStorageChange);
+    handleStorageChange();
 
-      return () => {
-          window.removeEventListener('storage', handleStorageChange);
-      };
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const t = useMemo(() => siteTranslations.en, [siteTranslations]);
@@ -103,7 +100,7 @@ const MainSite = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   }, []);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     const now = Date.now();
@@ -124,27 +121,26 @@ const MainSite = () => {
 
     lastSubmissionTime = now;
 
-    emailjs
-      .send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+    try {
+      emailjs.init("skwn_-DYfDakGK644");
+      
+      await emailjs.send(
+        "service_bdj14o3",
+        "template_2e2nikq",
         {
-          from_name: formData.name,
-          from_email: formData.email,
-          message: formData.message,
-          to_email: 'tiger3homs@gmail.com',
           name: formData.name,
           email: formData.email,
-        },
-        import.meta.env.VITE_EMAILJS_USER_ID
-      )
-      .then(() => {
-        alert('Message sent successfully!');
-        setFormData({ name: '', email: '', message: '' });
-      })
-      .catch(() => {
-        alert('Failed to send message. Please try again.');
-      });
+          message: formData.message,
+          to_email: 'tiger3homs@gmail.com',
+        }
+      );
+
+      alert('Message sent successfully!');
+      setFormData({ name: '', email: '', message: '' });
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      alert('Failed to send message. Please try again.');
+    }
   }, [formData]);
 
   const projectsData = useMemo(() => defaultGetProjectsData(siteTranslations), [siteTranslations]);
