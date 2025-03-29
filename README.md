@@ -1,4 +1,4 @@
-# TIGER3HOMS Home Page
+# TIGER3HOMS Home 
 
 ## 🚀 About the Project
 This project serves as the personal homepage for TIGER3HOMS, showcasing various projects, blogs, and contact information. It provides visitors with insights into the work and interests of TIGER3HOMS.

@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? './' : '/', // Set the base path to match the GitHub Pages deployment
+  // Set the base path explicitly to match the GitHub Pages deployment subdirectory
+  base: process.env.NODE_ENV === 'production' ? '/home/' : '/', 
   plugins: [react()],
 });
