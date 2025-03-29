@@ -6,6 +6,6 @@ export default defineConfig({
   // Set the base path for deployment. Should match the subdirectory on GitHub Pages.
   // If deploying to https://<USERNAME>.github.io/, use '/'.
   // If deploying to https://<USERNAME>.github.io/<REPO_NAME>/, use '/<REPO_NAME>/'.
-  base: '/', // Assuming deployment to the root of tiger3homs.github.io
+  base: '/home/', // Set to the repository name for GitHub Pages project sites
   plugins: [react()],
 });
