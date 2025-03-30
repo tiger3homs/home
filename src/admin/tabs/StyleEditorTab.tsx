@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; // Restore Firestore imports
+import chroma from 'chroma-js'; // Import chroma-js
 import { db } from '../../firebaseConfig'; // Import Firestore instance
 import { translations } from '../../translations'; // Import translations object
 
@@ -44,6 +45,7 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
   const [backgroundToColor, setBackgroundToColor] = useState<string>(defaultStyles.backgroundToColor ?? '#1F2937');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [aiMode, setAiMode] = useState(0); // 0: Complementary, 1: Analogous, 2: Triadic
 
   // --- Optimized Input Change Handlers ---
   const isValidHexColor = (color: string): boolean => /^#[0-9A-F]{6}$/i.test(color);
@@ -225,6 +227,100 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     // alert('Styles reset to defaults. Click Save Styles to persist.');
   };
   // --- End Reset Function ---
+
+  // --- AI Color Generation using chroma-js (Enhanced Modes) ---
+  const handleGenerateAIColors = () => {
+    try {
+      // Use current primary color as base, fallback to default if invalid
+      const baseColor = chroma.valid(primaryColor) ? chroma(primaryColor) : chroma(defaultStyles.primaryColor);
+      const currentMode = aiMode % 3; // Cycle through 0, 1, 2
+
+      let secondaryColorHex: string;
+      let accentColorHex: string; // For triadic
+
+      switch (currentMode) {
+        case 1: // Analogous
+          secondaryColorHex = baseColor.set('hsl.h', '+30').hex();
+          accentColorHex = baseColor.set('hsl.h', '-30').hex(); // Use the other analogous color for accents if needed
+          console.log("AI Mode: Analogous");
+          break;
+        case 2: // Triadic
+          secondaryColorHex = baseColor.set('hsl.h', '+120').hex();
+          accentColorHex = baseColor.set('hsl.h', '-120').hex(); // Third triadic color
+          console.log("AI Mode: Triadic");
+          break;
+        case 0: // Complementary (Default)
+        default:
+          secondaryColorHex = baseColor.set('hsl.h', '+180').hex();
+          accentColorHex = baseColor.set('hsl.h', '+150').hex(); // Split complementary accent
+           console.log("AI Mode: Complementary");
+          break;
+      }
+
+      setSecondaryColor(secondaryColorHex);
+
+      // Determine the color to base the text/titles/background on, depending on the mode
+      let referenceColor = baseColor; // Default to primary
+      if (currentMode === 1) { // Analogous - use a mix with secondary
+        referenceColor = chroma.mix(baseColor, secondaryColorHex, 0.5);
+      } else if (currentMode === 2) { // Triadic - use a mix with the third accent color
+        referenceColor = chroma.mix(baseColor, accentColorHex, 0.5);
+      }
+      // For complementary (mode 0), we stick with the baseColor as the reference.
+
+      // Generate text/title colors based on luminance contrast with a dark background assumption, using the referenceColor
+      // Aim for good contrast (WCAG AA requires 4.5:1 for normal text)
+      const darkBg = chroma('#18181b'); // Assume a dark background like zinc-900 for contrast check
+
+      // Title Color (lighter shade of referenceColor, ensure contrast)
+      let generatedTitleColor = referenceColor.brighten(1.5).hex();
+      if (chroma.contrast(generatedTitleColor, darkBg) < 4.5) {
+        generatedTitleColor = referenceColor.brighten(2.5).hex(); // Increase brightness if contrast is low
+      }
+      // Ensure it's not too white if reference is already light
+      generatedTitleColor = chroma.mix(generatedTitleColor, '#ffffff', 0.1).hex();
+      setTitleColor(generatedTitleColor);
+
+
+      // H3 Title Color (slightly less bright than main title, based on referenceColor)
+      let generatedH3Color = referenceColor.brighten(1).hex();
+       if (chroma.contrast(generatedH3Color, darkBg) < 4.5) {
+        generatedH3Color = referenceColor.brighten(2).hex(); // Increase brightness if contrast is low
+      }
+      // Ensure it's not too white
+      generatedH3Color = chroma.mix(generatedH3Color, '#ffffff', 0.05).hex();
+      setH3TitleColor(generatedH3Color);
+
+
+      // Text Color (even lighter, ensure contrast, based on referenceColor)
+       let generatedTextColor = referenceColor.brighten(2.5).desaturate(0.5).hex();
+       if (chroma.contrast(generatedTextColor, darkBg) < 4.5) {
+         generatedTextColor = referenceColor.brighten(3.5).desaturate(0.2).hex(); // Increase brightness significantly
+       }
+       // Ensure it's not too white
+       generatedTextColor = chroma.mix(generatedTextColor, '#ffffff', 0.2).hex();
+       setTextColor(generatedTextColor);
+
+
+      // Background Gradient (dark shades based on referenceColor, less desaturated)
+      const bgFrom = referenceColor.darken(2.2).desaturate(0.5).hex(); // Less darken, less desaturate
+      const bgTo = referenceColor.darken(1.8).desaturate(0.3).hex();   // Less darken, less desaturate
+      setBackgroundFromColor(bgFrom);
+      setBackgroundToColor(bgTo);
+
+      // Keep the selected primary color
+      // setPrimaryColor(baseColor.hex()); // Already set, but ensures it's a valid hex
+
+    } catch (error) {
+      console.error("Error generating AI colors:", error);
+      alert("Failed to generate colors. Please ensure the primary color is valid.");
+      // Optionally reset to defaults or previous state on error
+      handleResetToDefaults();
+    } finally {
+       setAiMode(prevMode => prevMode + 1); // Increment mode for next click
+    }
+  };
+  // --- End AI Color Generation ---
 
   // Keep isLoading check for rendering
   if (isLoading) {
@@ -490,6 +586,14 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
             className={`px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 ${isSaving || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             Reset to Defaults
+          </button>
+          {/* Add AI Generate Button */}
+          <button
+            onClick={handleGenerateAIColors}
+            disabled={isSaving || isLoading} // Also disable during save/load
+            className={`px-4 py-2 bg-purple-600 text-white font-medium rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${isSaving || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            Generate Colors
           </button>
         </div>
       </div>
