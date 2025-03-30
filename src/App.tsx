@@ -153,18 +153,18 @@ const MainSite = () => {
     <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ltr`}>
       <header className="container mx-auto px-4 py-16 md:py-32">
         <div className="max-w-3xl mx-auto text-center">
-          <Logo />
+          <Logo logoUrl={t.generalInfo.logoUrl} />
           <h1 
             className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600" 
             style={{ pointerEvents: 'none', userSelect: 'none' }}
           >
-            {t.title}
+            {t.generalInfo.siteTitle}
           </h1>
           <p 
             className="text-xl md:text-2xl text-gray-300 mb-8" 
             style={{ pointerEvents: 'none', userSelect: 'none' }}
           >
-            {t.role}
+            {t.generalInfo.siteRole}
           </p>
           <div className="flex justify-center space-x-6">
             <a href="https://github.com/tiger3homs" className="hover:text-blue-400 transition-colors transform hover:scale-110">
@@ -216,7 +216,7 @@ const MainSite = () => {
       </Suspense>
 
       <footer className="container mx-auto px-4 py-8 text-center text-gray-400">
-        <p>{t.footer}</p>
+        <p>{t.generalInfo.footerText}</p>
         <div className="mt-4">
           <Link to="/admin/dashboard" className="text-sm text-gray-500 hover:text-blue-400 transition-colors">
             Admin Dashboard

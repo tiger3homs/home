@@ -4,6 +4,7 @@ export const translations = {
       title: "General Information", // Title for the tab itself
       siteTitle: "Tiger3Homs", // Renamed from 'title'
       siteRole: "Website Developer & Tech Enthusiast", // Renamed from 'role'
+      logoUrl: "https://raw.githubusercontent.com/tiger3homs/home/refs/heads/main/public/logo.png", // Add logoUrl field here
       footerText: "© 2025. Built and designed by Tiger3homs", // Renamed from 'footer'
     },
     about: {
@@ -15,17 +16,20 @@ export const translations = {
       project1: {
         title: "OS Design v1",
         description: "The website offers a sleek, intuitive design with straightforward navigation and professional fonts. It highlights the company's services and expertise, making it easy for visitors to get in touch. Simple visuals and effective calls-to-action ensure a smooth and engaging experience. For more information, explore the site.",
-        tags: ["Modern", "User-friendly", "Professional"]
+        tags: ["Modern", "User-friendly", "Professional"],
+        link: "" // Add link field
       },
       project2: {
         title: "Project 2",
         description: "Coming soon.",
-        tags: ["Wait", "For", "It"]
+        tags: ["Wait", "For", "It"],
+        link: "" // Add link field
       },
       project3: {
         title: "New Project",
         description: "This is a new project description.",
-        tags: ["New", "Exciting", "Innovative"]
+        tags: ["New", "Exciting", "Innovative"],
+        link: "" // Add link field
       }
     },
     contact: {
