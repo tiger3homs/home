@@ -11,6 +11,8 @@ interface StyleData {
   titleColor?: string; // Added optional titleColor
   h3TitleColor?: string; // Added optional h3TitleColor
   textColor?: string; // Added optional textColor
+  backgroundFromColor?: string; // Added background start color
+  backgroundToColor?: string; // Added background end color
 }
 
 interface StyleEditorTabProps {
@@ -25,6 +27,8 @@ const defaultStyles: StyleData = {
   titleColor: '#d7e3ee',
   h3TitleColor: '#d7e3ee',
   textColor: '#c6d3e2',
+  backgroundFromColor: '#111827', // Default approx gray-900
+  backgroundToColor: '#1F2937', // Default approx gray-800
 };
 
 const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
@@ -34,7 +38,10 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
   const [fontFamily, setFontFamily] = useState(defaultStyles.fontFamily);
   const [titleColor, setTitleColor] = useState(defaultStyles.titleColor ?? '#ffffff'); // Use nullish coalescing for optional fields
   const [h3TitleColor, setH3TitleColor] = useState(defaultStyles.h3TitleColor ?? '#d7e3ee');
-  const [textColor, setTextColor] = useState(defaultStyles.textColor ?? '#c6d3e2');
+  const [textColor, setTextColor] = useState<string>(defaultStyles.textColor ?? '#c6d3e2');
+  // Explicitly type state as string and initialize with guaranteed string default
+  const [backgroundFromColor, setBackgroundFromColor] = useState<string>(defaultStyles.backgroundFromColor ?? '#111827');
+  const [backgroundToColor, setBackgroundToColor] = useState<string>(defaultStyles.backgroundToColor ?? '#1F2937');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -95,6 +102,9 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
           setTitleColor(data.titleColor || defaultStyles.titleColor || '#ffffff'); // Double fallback for safety
           setH3TitleColor(data.h3TitleColor || defaultStyles.h3TitleColor || '#d7e3ee');
           setTextColor(data.textColor || defaultStyles.textColor || '#c6d3e2');
+          // Ensure setting state uses defaults if Firestore data is missing, providing guaranteed string default
+          setBackgroundFromColor(data.backgroundFromColor ?? defaultStyles.backgroundFromColor ?? '#111827');
+          setBackgroundToColor(data.backgroundToColor ?? defaultStyles.backgroundToColor ?? '#1F2937');
         } else {
           console.log("loadStyles Function: No style document found, using defaults from defaultStyles object.");
           // Set state to defaults if no document exists
@@ -104,6 +114,9 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
           setTitleColor(defaultStyles.titleColor ?? '#ffffff');
           setH3TitleColor(defaultStyles.h3TitleColor ?? '#d7e3ee');
           setTextColor(defaultStyles.textColor ?? '#c6d3e2');
+          // Ensure setting state uses guaranteed string defaults
+          setBackgroundFromColor(defaultStyles.backgroundFromColor ?? '#111827');
+          setBackgroundToColor(defaultStyles.backgroundToColor ?? '#1F2937');
           // Optionally save defaults if not found
           // await setDoc(stylesDocRefInsideEffect, { primaryColor, secondaryColor, fontFamily, titleColor, h3TitleColor, textColor });
         }
@@ -131,6 +144,13 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     const validTitle = titleColor.match(/^#[0-9A-F]{6}$/i) ? titleColor : (defaultStyles.titleColor ?? '#ffffff');
     const validH3Title = h3TitleColor.match(/^#[0-9A-F]{6}$/i) ? h3TitleColor : (defaultStyles.h3TitleColor ?? '#d7e3ee');
     const validText = textColor.match(/^#[0-9A-F]{6}$/i) ? textColor : (defaultStyles.textColor ?? '#c6d3e2');
+    // Validate state directly, fallback to guaranteed string default
+    const validBgFrom = backgroundFromColor.match(/^#[0-9A-F]{6}$/i)
+      ? backgroundFromColor
+      : (defaultStyles.backgroundFromColor ?? '#111827');
+    const validBgTo = backgroundToColor.match(/^#[0-9A-F]{6}$/i)
+      ? backgroundToColor
+      : (defaultStyles.backgroundToColor ?? '#1F2937');
 
     document.documentElement.style.setProperty('--primary-color', validPrimary);
     document.documentElement.style.setProperty('--secondary-color', validSecondary);
@@ -139,8 +159,11 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     document.documentElement.style.setProperty('--title-color', validTitle);
     document.documentElement.style.setProperty('--h3title-color', validH3Title); // Note: CSS variable name is --h3title-color
     document.documentElement.style.setProperty('--text-color', validText);
+    // State variables are now guaranteed strings, so direct assignment is safe
+    document.documentElement.style.setProperty('--background-from-color', validBgFrom);
+    document.documentElement.style.setProperty('--background-to-color', validBgTo);
   }
-  }, [primaryColor, secondaryColor, fontFamily, titleColor, h3TitleColor, textColor, isLoading]); // Add new dependencies
+  }, [primaryColor, secondaryColor, fontFamily, titleColor, h3TitleColor, textColor, backgroundFromColor, backgroundToColor, isLoading]); // Add new dependencies
 
 
   // Restore handleSaveStyles function with added logging
@@ -167,7 +190,9 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
         fontFamily,
         titleColor,
         h3TitleColor,
-        textColor
+        textColor,
+        backgroundFromColor,
+        backgroundToColor
     };
     console.log('Attempting to save styles to Firestore:', stylesToSave);
     try {
@@ -192,6 +217,9 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     setTitleColor(defaultStyles.titleColor ?? '#ffffff'); // Use nullish coalescing for optional fields
     setH3TitleColor(defaultStyles.h3TitleColor ?? '#d7e3ee');
     setTextColor(defaultStyles.textColor ?? '#c6d3e2');
+    // Ensure reset uses guaranteed string defaults
+    setBackgroundFromColor(defaultStyles.backgroundFromColor ?? '#111827');
+    setBackgroundToColor(defaultStyles.backgroundToColor ?? '#1F2937');
 
     // Optionally, provide user feedback
     // alert('Styles reset to defaults. Click Save Styles to persist.');
@@ -358,8 +386,66 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
         </div>
         {/* --- End New Color Inputs --- */}
 
+        {/* Background Gradient Colors */}
+        <div>
+          <label htmlFor="backgroundFromColorText" className="block text-sm font-medium text-gray-700 mb-1">
+            Background Gradient From
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              id="backgroundFromColorPicker"
+              // Validate state directly, fallback to guaranteed string default for value prop
+              value={backgroundFromColor.match(/^#[0-9A-F]{6}$/i) ? backgroundFromColor : (defaultStyles.backgroundFromColor ?? '#111827')}
+              onChange={handleColorPickerChange(setBackgroundFromColor)}
+              className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              id="backgroundFromColorText"
+              // Value can be the state value directly here
+              value={backgroundFromColor}
+              onChange={handleColorTextChange(setBackgroundFromColor)}
+              className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="#rrggbb"
+              maxLength={7}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="backgroundToColorText" className="block text-sm font-medium text-gray-700 mb-1">
+            Background Gradient To
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              id="backgroundToColorPicker"
+              // Validate state directly, fallback to guaranteed string default for value prop
+              value={backgroundToColor.match(/^#[0-9A-F]{6}$/i) ? backgroundToColor : (defaultStyles.backgroundToColor ?? '#1F2937')}
+              onChange={handleColorPickerChange(setBackgroundToColor)}
+              className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              id="backgroundToColorText"
+              // Value can be the state value directly here
+              value={backgroundToColor}
+              onChange={handleColorTextChange(setBackgroundToColor)}
+              className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="#rrggbb"
+              maxLength={7}
+            />
+          </div>
+        </div>
+        {/* End Background Gradient Colors */}
+
+
         {/* Preview Section - Updated with Translations */}
-        <div className="p-4 md:p-6 border border-gray-300 bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-lg shadow-lg">
+        <div
+          className="p-4 md:p-6 border border-gray-300 text-white rounded-lg shadow-lg"
+          style={{ background: `linear-gradient(to bottom right, ${backgroundFromColor}, ${backgroundToColor})` }}
+        >
             <h5 className="text-md font-medium mb-3">Preview</h5>
             <div style={{ fontFamily: fontFamily }}>
                 {/* Site Title and Role using Primary and Secondary Colors */}

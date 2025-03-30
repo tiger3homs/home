@@ -207,8 +207,18 @@ const MainSite = () => {
     return <div className="flex items-center justify-center min-h-screen bg-gray-900"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div></div>;
   }
 
+  // Define default background colors for fallback
+  const defaultBgFrom = '#111827'; // Approx gray-900
+  const defaultBgTo = '#1F2937'; // Approx gray-800
+
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ltr`}>
+    // Apply background using CSS variables with fallbacks
+    <div
+      className={`min-h-screen text-white ltr`}
+      style={{
+        background: `linear-gradient(to bottom right, var(--background-from-color, ${defaultBgFrom}), var(--background-to-color, ${defaultBgTo}))`
+      }}
+    >
       <header className="container mx-auto px-4 py-16 md:py-32">
         <div className="max-w-3xl mx-auto text-center">
           <Logo logoUrl={t.generalInfo.logoUrl} />
@@ -297,6 +307,8 @@ interface StyleData {
   titleColor?: string; // Added optional titleColor
   h3TitleColor?: string; // Added optional h3TitleColor
   textColor?: string; // Added optional textColor
+  backgroundFromColor?: string; // Added background start color
+  backgroundToColor?: string; // Added background end color
 }
 
 function App() {
@@ -329,6 +341,13 @@ function App() {
           }
           if (data.textColor) {
             document.documentElement.style.setProperty('--text-color', data.textColor);
+          }
+          // Apply background colors if they exist
+          if (data.backgroundFromColor) {
+            document.documentElement.style.setProperty('--background-from-color', data.backgroundFromColor);
+          }
+          if (data.backgroundToColor) {
+            document.documentElement.style.setProperty('--background-to-color', data.backgroundToColor);
           }
           console.log('App.tsx: Global styles applied from Firestore:', data);
         } else {
