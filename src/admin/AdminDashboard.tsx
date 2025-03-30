@@ -7,8 +7,15 @@ import ProjectsTab from './tabs/ProjectsTab';
 import ServicesTab from './tabs/ServicesTab';
 import StyleEditorTab from './tabs/StyleEditorTab';
 import SocialLinksTab from './tabs/SocialLinksTab';
-import { TranslationsType, LanguageKey, newProjectTemplate } from './types';
+import { TranslationsType, LanguageKey, newProjectTemplate, ServiceItem } from './types'; // Import ServiceItem if defined there, or define below
 import { renderFields, updateNestedState } from './utils';
+
+// Define a template for new service items if not imported from types.ts
+const newServiceTemplate: ServiceItem = {
+  title: 'New Service Title',
+  description: 'New service description.',
+  // icon: 'default-icon.png' // Add default icon if applicable
+};
 
 // Define the type for the keys of the 'en' object in translations
 type TranslationSectionKey = keyof typeof defaultTranslations.en;
@@ -100,6 +107,35 @@ const AdminDashboard: React.FC = () => {
       setActiveTab('projects');
     }
   }, [activeTab]);
+
+
+  const handleAddNewService = useCallback(() => {
+    setTranslations((prev: TranslationsType) => {
+      const langData = { ...prev.en }; // Shallow copy
+
+      // Ensure services section and list array exist
+      if (typeof langData.services !== 'object' || langData.services === null) {
+        // Initialize services with title and empty list array if it doesn't exist
+        langData.services = { title: defaultTranslations.en.services.title || 'Services', list: [] };
+      } else if (!Array.isArray(langData.services.list)) {
+        // Initialize list array if it's missing
+        langData.services.list = [];
+      }
+
+      // Add the new service item to the list array
+      langData.services.list.push({ ...newServiceTemplate });
+
+      return {
+        ...prev,
+        en: langData
+      };
+    });
+    setSaveStatus('New service added. Edit details and save.');
+    if (activeTab !== 'services') {
+      setActiveTab('services');
+    }
+  }, [activeTab]); // Dependency on activeTab to potentially switch tabs
+
 
   // Note: This relies on updateNestedState's logic which uses 'any'
   // More robust type checking could be added here if needed.
@@ -204,12 +240,10 @@ const AdminDashboard: React.FC = () => {
 
     // Dynamic Tabs - Use type guard
     if (isValidTranslationKey(activeTab)) {
-      // TypeScript now knows activeTab is a valid key
-      const tabData = translations.en[activeTab];
-
-      // Fallback title logic remains similar
-      const tabTitle = typeof tabData === 'object' && tabData !== null && 'title' in tabData && typeof tabData.title === 'string'
-        ? tabData.title
+      // Determine title based on the active tab key
+      const sectionDataForTitle = translations.en[activeTab];
+      const tabTitle = typeof sectionDataForTitle === 'object' && sectionDataForTitle !== null && 'title' in sectionDataForTitle && typeof sectionDataForTitle.title === 'string'
+        ? sectionDataForTitle.title
         : activeTab.replace(/([A-Z])/g, ' $1');
 
       return (
@@ -217,31 +251,56 @@ const AdminDashboard: React.FC = () => {
           <h3 className="text-xl font-semibold mb-4 text-gray-700 capitalize">
             Editing: {tabTitle} Content
           </h3>
-          {activeTab === 'projects' ? (
-            <ProjectsTab
-              data={tabData} // Pass the correctly typed data
+          {/* Render specific tabs, fetching data within the block for better type inference */}
+          {activeTab === 'projects' ? (() => {
+            const projectsData = translations.en.projects; // Explicitly get projects data
+            return <ProjectsTab
+              data={projectsData} // Pass the correctly typed data
               path={[activeTab]}
               handleChange={handleInputChange}
               editingPath={editingPath}
               setEditingPath={setEditingPath}
               handleAddProject={handleAddNewProject}
               handleDelete={handleDeleteItem}
-              renderFields={renderFields} // renderFields still uses 'any' internally
-            />
-          ) : activeTab === 'services' ? (
-            <ServicesTab
-              data={tabData} // Pass the correctly typed data
+              renderFields={renderFields}
+            />;
+          })() : activeTab === 'services' ? (() => { // Corrected block for services
+             const servicesData = translations.en.services; // Explicitly get services data
+             // Ensure servicesData is correctly typed or provide a fallback
+             if (!servicesData || typeof servicesData !== 'object' || !Array.isArray(servicesData.list)) {
+                 // Handle case where services data might be missing or malformed initially
+                 // You might want to return null, a loading indicator, or an error message
+                 // Or ensure initial state/defaultTranslations provides a valid structure
+                 console.error("Services data is not in the expected format:", servicesData);
+                 // For now, let's provide a default structure to avoid crashing renderFields
+                 // A better approach might be to ensure defaultTranslations.en.services is always valid
+                 const defaultServiceData = { title: 'Services', list: [] };
+                 return <ServicesTab
+                     data={defaultServiceData}
+                     path={[activeTab]}
+                     handleChange={handleInputChange}
+                     editingPath={editingPath}
+                     setEditingPath={setEditingPath}
+                     handleAddService={handleAddNewService} // Correct prop name
+                     handleDelete={handleDeleteItem}
+                     renderFields={renderFields}
+                 />;
+             }
+             // Render ServicesTab with validated/fetched data
+             return <ServicesTab
+              data={servicesData} // Pass the correctly typed data
               path={[activeTab]}
               handleChange={handleInputChange}
               editingPath={editingPath}
               setEditingPath={setEditingPath}
+              handleAddService={handleAddNewService} // Correct prop name
               handleDelete={handleDeleteItem}
-              renderFields={renderFields} // renderFields still uses 'any' internally
-            />
-          ) : (
+              renderFields={renderFields}
+            />;
+          })() : ( // End of services block, start generic block
             // Generic rendering for other dynamic tabs (e.g., about, contact, generalInfo)
             renderFields(
-              tabData,
+              translations.en[activeTab], // Pass the specific section data
               [activeTab],
               handleInputChange,
               editingPath,

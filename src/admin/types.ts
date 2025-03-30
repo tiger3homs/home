@@ -15,7 +15,7 @@ interface ProjectsSection {
 }
 
 // Define the structure for the 'services' list items
-interface ServiceItem {
+export interface ServiceItem { // <-- Added export here
     title: string;
     description: string;
 }
