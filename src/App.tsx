@@ -221,7 +221,7 @@ const MainSite = () => {
           </h1>
           {/* Use text-secondary or a lighter gray for subtitle? Let's try text-secondary */}
           <p
-            className="text-xl md:text-2xl text-text mb-8"
+            className="text-xl md:text-2xl text-secondary mb-8"
             style={{ pointerEvents: 'none', userSelect: 'none', }}
           >
             {t.generalInfo.siteRole}
@@ -257,7 +257,7 @@ const MainSite = () => {
       <section className="container mx-auto px-4 py-16 bg-gray-800/50 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto">
           {/* Use text-primary for the About title */}
-          <h2 className="text-3xl font-bold text-center mb-8 text-title">{t.about.title}</h2>
+          <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'var(--title-color)' }}>{t.about.title}</h2>
           {/* Use text-secondary or a lighter gray for About text */}
           <p className="text-lg leading-relaxed text-text">
             {t.about.description}
@@ -282,8 +282,8 @@ const MainSite = () => {
       </Suspense>
 
       {/* Use text-secondary for footer text */}
-      <footer className="container mx-auto px-4 py-8 text-center text-text">
-        <p >{t.generalInfo.footerText}</p>
+      <footer className="container mx-auto px-4 py-8 text-center">
+        <p className="text-secondary">{t.generalInfo.footerText}</p>
         <div className="mt-4">
           {/* Use text-secondary and hover:text-primary for footer link */}
           <Link to="/admin/dashboard" className="text-sm text-secondary hover:text-primary transition-colors">
