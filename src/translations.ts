@@ -1,7 +1,11 @@
 export const translations = {
   en: {
-    title: "Tiger3Homs",
-    role: "Website Developer & Tech Enthusiast",
+    generalInfo: {
+      title: "General Information", // Title for the tab itself
+      siteTitle: "Tiger3Homs", // Renamed from 'title'
+      siteRole: "Website Developer & Tech Enthusiast", // Renamed from 'role'
+      footerText: "© 2025. Built and designed by Tiger3homs", // Renamed from 'footer'
+    },
     about: {
       title: "About Me",
       description: "I'm a passionate software developer with expertise in web development and system architecture. I love building efficient, scalable solutions and contributing to open-source projects. When I'm not coding, you can find me exploring new technologies and sharing knowledge with the developer community."
@@ -34,7 +38,7 @@ export const translations = {
       messagePlaceholder: "Enter your message",
       submitButton: "Send Message",
     },
-    footer: "© 2025. Built and designed by Tiger3homs",
+    // 'footer' is now under 'generalInfo'
     services: {
       title: "Services",
       list: [
