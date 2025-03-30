@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; // Restore Firestore imports
 import { db } from '../../firebaseConfig'; // Import Firestore instance
+import { translations } from '../../translations'; // Import translations object
 
 // Update StyleData interface
 interface StyleData {
@@ -351,24 +352,33 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
         </div>
         {/* --- End New Color Inputs --- */}
 
-        {/* Preview Section - Update this */}
+        {/* Preview Section - Updated with Translations */}
         <div className="p-4 md:p-6 border border-gray-300 bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-lg shadow-lg">
             <h5 className="text-md font-medium mb-3">Preview</h5>
-            {/* Use state directly for preview in this simplified version */}
             <div style={{ fontFamily: fontFamily }}>
-                <h1 className="mb-2">This text uses the selected font family.</h1>
-                <h1 style={{ color: primaryColor }} className="text-3xl text-center font-bold mb-6">
-                    This text uses the primary color.
+                {/* Site Title and Role using Primary and Secondary Colors */}
+                <h1 style={{ color: primaryColor }} className="text-3xl text-center font-bold mb-1">
+                    {translations.en.generalInfo.siteTitle}
                 </h1>
-                <p style={{ color: secondaryColor }} className="text-2xl font-bold text-center mb-6">
-                    This text uses the secondary color.
+                <p style={{ color: secondaryColor }} className="text-xl text-center mb-6">
+                    {translations.en.generalInfo.siteRole}
                 </p>
-                {/* Add previews for new colors */}
-                <h2 style={{ color: titleColor }} className="text-1xl font-bold text-center mb-6">Preview Title (h2)</h2>
-                <h3 style={{ color: h3TitleColor }} className="text-1xl font-bold text-center mb-6">Preview Sub-Title (h3)</h3>
+
+                {/* Services Section Title using Title Color */}
+                <h2 style={{ color: titleColor }} className="text-2xl font-bold text-center mb-3">
+                    {translations.en.services.title}
+                </h2>
+
+                 {/* Example of H3 Title Color (if needed for other previews) */}
+                 <h3 style={{ color: h3TitleColor }} className="text-lg font-semibold text-center mb-6">
+                 {translations.en.projects.project1.title}
+                  </h3>
+
+                {/* About Description using Text Color */}
                 <p style={{ color: textColor }} className="text-center mb-12">
-                    This paragraph text uses the main text color.
+                    {translations.en.projects.project1.description}
                 </p>
+
             </div>
          </div>
 
