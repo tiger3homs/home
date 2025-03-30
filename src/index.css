@@ -5,11 +5,11 @@
 @tailwind utilities;
 
 :root {
-  --primary-color: #007bff; /* Default primary color */
-  --secondary-color: #6c757d; /* Default secondary color */
-  --title-color: #ffffff; /* Default title color */
-  --h3title-color: #b91212; /* Default h3title color */
-  --text-color: #24853c; /* Default text color */
+  --primary-color: #377dc8; /* Default primary color */
+  --secondary-color: #0f3257; /* Default secondary color */
+  --title-color: #d7e3ee; /* Default title color */
+  --h3title-color: #d7e3ee; /* Default h3title color */
+  --text-color: #c6d3e2; /* Default text color */
   --font-family: 'Noto Sans', sans-serif; /* Default font */
 }
 
