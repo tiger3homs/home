@@ -156,23 +156,27 @@ const AdminDashboard: React.FC = () => {
 
   const handleAddNewService = useCallback(() => {
     setTranslations((prev: TranslationsType) => {
-      const langData = { ...prev.en }; // Shallow copy
+      // Ensure prev.en and prev.en.services exist and are objects
+      const currentServices = prev.en?.services;
+      // Default to an empty array if list doesn't exist or isn't an array
+      const currentList = Array.isArray(currentServices?.list) ? currentServices.list : [];
 
-      // Ensure services section and list array exist
-      if (typeof langData.services !== 'object' || langData.services === null) {
-        // Initialize services with title and empty list array if it doesn't exist
-        langData.services = { title: defaultTranslations.en.services.title || 'Services', list: [] };
-      } else if (!Array.isArray(langData.services.list)) {
-        // Initialize list array if it's missing
-        langData.services.list = [];
-      }
+      // Create a new list with the new item added immutably
+      const newList = [...currentList, { ...newServiceTemplate }];
 
-      // Add the new service item to the list array
-      langData.services.list.push({ ...newServiceTemplate });
+      // Construct the new 'en' state immutably
+      const newEnState = {
+        ...prev.en, // Copy existing 'en' data
+        services: { // Overwrite 'services' section
+          // Copy existing service properties (like title) or use defaults if services didn't exist
+          ...(currentServices || { title: defaultTranslations.en.services.title || 'Services', list: [] }),
+          list: newList, // Use the new list
+        },
+      };
 
       return {
-        ...prev,
-        en: langData
+        ...prev, // Copy other languages if any
+        en: newEnState, // Set the updated 'en' state
       };
     });
     setSaveStatus('New service added. Edit details and save.');
