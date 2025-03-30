@@ -351,35 +351,22 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
         </div>
         {/* --- End New Color Inputs --- */}
 
-
         {/* Preview Section - Update this */}
-        <div className="mt-6 p-4 border border-gray-300 rounded">
+        <div className="p-4 md:p-6 border border-gray-300 bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-lg shadow-lg">
             <h5 className="text-md font-medium mb-3">Preview</h5>
             {/* Use state directly for preview in this simplified version */}
             <div style={{ fontFamily: fontFamily }}>
-                <p className="mb-2">This text uses the selected font family.</p>
-                <button
-                    style={{ backgroundColor: primaryColor, color: 'white' }}
-                    className="px-3 py-1 rounded mr-2"
-                >
-                    Primary Button
-                </button>
-                <button
-                    style={{ backgroundColor: secondaryColor, color: 'white' }}
-                    className="px-3 py-1 rounded"
-                >
-                    Secondary Button
-                </button>
-                <p style={{ color: primaryColor }} className="mt-2">
+                <h1 className="mb-2">This text uses the selected font family.</h1>
+                <h1 style={{ color: primaryColor }} className="text-3xl text-center font-bold mb-6">
                     This text uses the primary color.
-                </p>
-                <p style={{ color: secondaryColor }} className="mt-1">
+                </h1>
+                <p style={{ color: secondaryColor }} className="text-2xl font-bold text-center mb-6">
                     This text uses the secondary color.
                 </p>
                 {/* Add previews for new colors */}
-                <h2 style={{ color: titleColor }} className="text-lg font-semibold mt-3">Preview Title (h2)</h2>
-                <h3 style={{ color: h3TitleColor }} className="text-md font-semibold mt-1">Preview Sub-Title (h3)</h3>
-                <p style={{ color: textColor }} className="mt-1">
+                <h2 style={{ color: titleColor }} className="text-1xl font-bold text-center mb-6">Preview Title (h2)</h2>
+                <h3 style={{ color: h3TitleColor }} className="text-1xl font-bold text-center mb-6">Preview Sub-Title (h3)</h3>
+                <p style={{ color: textColor }} className="text-center mb-12">
                     This paragraph text uses the main text color.
                 </p>
             </div>
