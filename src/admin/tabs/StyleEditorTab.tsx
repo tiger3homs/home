@@ -16,84 +16,51 @@ interface StyleEditorTabProps {
   // Define props needed for the style editor tab, if any
 }
 
+// Define default styles based on index.css for consistency
+const defaultStyles: StyleData = {
+  primaryColor: '#377dc8',
+  secondaryColor: '#0f3257',
+  fontFamily: "'Noto Sans', sans-serif", // Keep quotes for string literal
+  titleColor: '#d7e3ee',
+  h3TitleColor: '#d7e3ee',
+  textColor: '#c6d3e2',
+};
+
 const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
-  // State for style properties - Keep these
-  const [primaryColor, setPrimaryColor] = useState('#007bff');
-  const [secondaryColor, setSecondaryColor] = useState('#6c757d');
-  const [fontFamily, setFontFamily] = useState("'Noto Sans', sans-serif");
-  // Add state for new colors with defaults synced from index.css
-  const [titleColor, setTitleColor] = useState('#ffffff'); // Synced from index.css
-  const [h3TitleColor, setH3TitleColor] = useState('#b91212'); // Synced from index.css
-  const [textColor, setTextColor] = useState('#24853c'); // Synced from index.css
+  // State initialized with default values
+  const [primaryColor, setPrimaryColor] = useState(defaultStyles.primaryColor);
+  const [secondaryColor, setSecondaryColor] = useState(defaultStyles.secondaryColor);
+  const [fontFamily, setFontFamily] = useState(defaultStyles.fontFamily);
+  const [titleColor, setTitleColor] = useState(defaultStyles.titleColor ?? '#ffffff'); // Use nullish coalescing for optional fields
+  const [h3TitleColor, setH3TitleColor] = useState(defaultStyles.h3TitleColor ?? '#d7e3ee');
+  const [textColor, setTextColor] = useState(defaultStyles.textColor ?? '#c6d3e2');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // --- Input Change Handlers - Keep these ---
+  // --- Optimized Input Change Handlers ---
   const isValidHexColor = (color: string): boolean => /^#[0-9A-F]{6}$/i.test(color);
 
-  // Handlers for Primary Color
-  const handlePrimaryColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPrimaryColor(e.target.value);
-  };
-  const handlePrimaryColorTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    // Allow empty or '#' for partial input, or valid hex
-    if (isValidHexColor(newValue) || newValue === '' || newValue === '#') {
-       setPrimaryColor(newValue);
-    }
+  // Generic handler for color picker changes
+  const handleColorPickerChange = (setter: React.Dispatch<React.SetStateAction<string>>) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setter(e.target.value);
   };
 
-  // Handlers for Secondary Color
-  const handleSecondaryColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSecondaryColor(e.target.value);
-  };
-   const handleSecondaryColorTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    // Allow empty or '#' for partial input, or valid hex
-    if (isValidHexColor(newValue) || newValue === '' || newValue === '#') {
-       setSecondaryColor(newValue);
-    }
+  // Generic handler for color text input changes
+  const handleColorTextChange = (setter: React.Dispatch<React.SetStateAction<string>>) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      // Allow empty or '#' for partial input, or valid hex
+      if (isValidHexColor(newValue) || newValue === '' || newValue === '#') {
+        setter(newValue);
+      }
   };
 
-  // Handler for Font Family
+  // Specific handler for Font Family (as it's not a color)
   const handleFontFamilyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFontFamily(e.target.value);
   };
-
-  // --- Add Handlers for New Colors ---
-  // Title Color
-  const handleTitleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitleColor(e.target.value);
-  };
-  const handleTitleColorTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    if (isValidHexColor(newValue) || newValue === '' || newValue === '#') {
-       setTitleColor(newValue);
-    }
-  };
-
-  // H3 Title Color
-  const handleH3TitleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setH3TitleColor(e.target.value);
-  };
-  const handleH3TitleColorTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    if (isValidHexColor(newValue) || newValue === '' || newValue === '#') {
-       setH3TitleColor(newValue);
-    }
-  };
-
-  // Text Color
-  const handleTextColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTextColor(e.target.value);
-  };
-  const handleTextColorTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    if (isValidHexColor(newValue) || newValue === '' || newValue === '#') {
-       setTextColor(newValue);
-    }
-  };
-  // --- End New Handlers ---
+  // --- End Optimized Handlers ---
 
   // Firestore document reference will be created inside useEffect now
 
@@ -120,15 +87,22 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
         if (docSnap.exists()) {
           console.log('loadStyles Function: Document exists. Data:', docSnap.data()); // Log if doc exists
           const data = docSnap.data() as StyleData;
-          setPrimaryColor(data.primaryColor || '#007bff'); // Fallback to default if missing
-          setSecondaryColor(data.secondaryColor || '#6c757d');
-          setFontFamily(data.fontFamily || "'Noto Sans', sans-serif");
-          // Load new colors, providing defaults if they don't exist yet
-          setTitleColor(data.titleColor || '#ffffff'); // Use synced default
-          setH3TitleColor(data.h3TitleColor || '#b91212'); // Use synced default
-          setTextColor(data.textColor || '#24853c'); // Use synced default
+          // Use defaultStyles for fallbacks
+          setPrimaryColor(data.primaryColor || defaultStyles.primaryColor);
+          setSecondaryColor(data.secondaryColor || defaultStyles.secondaryColor);
+          setFontFamily(data.fontFamily || defaultStyles.fontFamily);
+          setTitleColor(data.titleColor || defaultStyles.titleColor || '#ffffff'); // Double fallback for safety
+          setH3TitleColor(data.h3TitleColor || defaultStyles.h3TitleColor || '#d7e3ee');
+          setTextColor(data.textColor || defaultStyles.textColor || '#c6d3e2');
         } else {
-          console.log("loadStyles Function: No style document found, using defaults for all styles.");
+          console.log("loadStyles Function: No style document found, using defaults from defaultStyles object.");
+          // Set state to defaults if no document exists
+          setPrimaryColor(defaultStyles.primaryColor);
+          setSecondaryColor(defaultStyles.secondaryColor);
+          setFontFamily(defaultStyles.fontFamily);
+          setTitleColor(defaultStyles.titleColor ?? '#ffffff');
+          setH3TitleColor(defaultStyles.h3TitleColor ?? '#d7e3ee');
+          setTextColor(defaultStyles.textColor ?? '#c6d3e2');
           // Optionally save defaults if not found
           // await setDoc(stylesDocRefInsideEffect, { primaryColor, secondaryColor, fontFamily, titleColor, h3TitleColor, textColor });
         }
@@ -150,12 +124,12 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
   useEffect(() => {
     // Keep this effect as it was working
     if (!isLoading) {
-    // Ensure colors are valid before setting CSS variables
-    const validPrimary = primaryColor.match(/^#[0-9A-F]{6}$/i) ? primaryColor : '#000000';
-    const validSecondary = secondaryColor.match(/^#[0-9A-F]{6}$/i) ? secondaryColor : '#000000';
-    const validTitle = titleColor.match(/^#[0-9A-F]{6}$/i) ? titleColor : '#ffffff'; // Use synced default
-    const validH3Title = h3TitleColor.match(/^#[0-9A-F]{6}$/i) ? h3TitleColor : '#b91212'; // Use synced default
-    const validText = textColor.match(/^#[0-9A-F]{6}$/i) ? textColor : '#24853c'; // Use synced default
+    // Ensure colors are valid before setting CSS variables, use defaultStyles for fallbacks
+    const validPrimary = primaryColor.match(/^#[0-9A-F]{6}$/i) ? primaryColor : defaultStyles.primaryColor;
+    const validSecondary = secondaryColor.match(/^#[0-9A-F]{6}$/i) ? secondaryColor : defaultStyles.secondaryColor;
+    const validTitle = titleColor.match(/^#[0-9A-F]{6}$/i) ? titleColor : (defaultStyles.titleColor ?? '#ffffff');
+    const validH3Title = h3TitleColor.match(/^#[0-9A-F]{6}$/i) ? h3TitleColor : (defaultStyles.h3TitleColor ?? '#d7e3ee');
+    const validText = textColor.match(/^#[0-9A-F]{6}$/i) ? textColor : (defaultStyles.textColor ?? '#c6d3e2');
 
     document.documentElement.style.setProperty('--primary-color', validPrimary);
     document.documentElement.style.setProperty('--secondary-color', validSecondary);
@@ -208,6 +182,21 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     }
   };
 
+  // --- Add Reset Function ---
+  const handleResetToDefaults = () => {
+    // Reset state directly using the defaultStyles constant object
+    setPrimaryColor(defaultStyles.primaryColor);
+    setSecondaryColor(defaultStyles.secondaryColor);
+    setFontFamily(defaultStyles.fontFamily);
+    setTitleColor(defaultStyles.titleColor ?? '#ffffff'); // Use nullish coalescing for optional fields
+    setH3TitleColor(defaultStyles.h3TitleColor ?? '#d7e3ee');
+    setTextColor(defaultStyles.textColor ?? '#c6d3e2');
+
+    // Optionally, provide user feedback
+    // alert('Styles reset to defaults. Click Save Styles to persist.');
+  };
+  // --- End Reset Function ---
+
   // Keep isLoading check for rendering
   if (isLoading) {
     return <div>Loading styles...</div>; // Loading indicator
@@ -228,15 +217,15 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
             <input
               type="color"
               id="primaryColorPicker" // Use distinct ID
-              value={primaryColor.match(/^#[0-9A-F]{6}$/i) ? primaryColor : '#000000'} // Ensure valid value for color picker
-              onChange={handlePrimaryColorPickerChange}
+              value={primaryColor.match(/^#[0-9A-F]{6}$/i) ? primaryColor : defaultStyles.primaryColor} // Ensure valid value for color picker
+              onChange={handleColorPickerChange(setPrimaryColor)} // Use generic handler
               className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
             />
             <input
               type="text"
               id="primaryColorText" // Use distinct ID
               value={primaryColor}
-              onChange={handlePrimaryColorTextChange}
+              onChange={handleColorTextChange(setPrimaryColor)} // Use generic handler
               className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               placeholder="#rrggbb"
               maxLength={7} // Limit input length
@@ -253,15 +242,15 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
             <input
               type="color"
               id="secondaryColorPicker" // Use distinct ID
-              value={secondaryColor.match(/^#[0-9A-F]{6}$/i) ? secondaryColor : '#000000'} // Ensure valid value for color picker
-              onChange={handleSecondaryColorPickerChange}
+              value={secondaryColor.match(/^#[0-9A-F]{6}$/i) ? secondaryColor : defaultStyles.secondaryColor} // Ensure valid value for color picker
+              onChange={handleColorPickerChange(setSecondaryColor)} // Use generic handler
               className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
             />
             <input
               type="text"
               id="secondaryColorText" // Use distinct ID
               value={secondaryColor}
-              onChange={handleSecondaryColorTextChange}
+              onChange={handleColorTextChange(setSecondaryColor)} // Use generic handler
               className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               placeholder="#rrggbb"
               maxLength={7} // Limit input length
@@ -295,15 +284,15 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
             <input
               type="color"
               id="titleColorPicker"
-              value={titleColor.match(/^#[0-9A-F]{6}$/i) ? titleColor : '#ffffff'} // Use synced default
-              onChange={handleTitleColorPickerChange}
+              value={titleColor.match(/^#[0-9A-F]{6}$/i) ? titleColor : (defaultStyles.titleColor ?? '#ffffff')} // Use default fallback
+              onChange={handleColorPickerChange(setTitleColor)} // Use generic handler
               className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
             />
             <input
               type="text"
               id="titleColorText"
               value={titleColor}
-              onChange={handleTitleColorTextChange}
+              onChange={handleColorTextChange(setTitleColor)} // Use generic handler
               className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               placeholder="#rrggbb"
               maxLength={7}
@@ -320,15 +309,15 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
             <input
               type="color"
               id="h3TitleColorPicker"
-              value={h3TitleColor.match(/^#[0-9A-F]{6}$/i) ? h3TitleColor : '#b91212'} // Use synced default
-              onChange={handleH3TitleColorPickerChange}
+              value={h3TitleColor.match(/^#[0-9A-F]{6}$/i) ? h3TitleColor : (defaultStyles.h3TitleColor ?? '#d7e3ee')} // Use default fallback
+              onChange={handleColorPickerChange(setH3TitleColor)} // Use generic handler
               className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
             />
             <input
               type="text"
               id="h3TitleColorText"
               value={h3TitleColor}
-              onChange={handleH3TitleColorTextChange}
+              onChange={handleColorTextChange(setH3TitleColor)} // Use generic handler
               className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               placeholder="#rrggbb"
               maxLength={7}
@@ -345,15 +334,15 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
             <input
               type="color"
               id="textColorPicker"
-              value={textColor.match(/^#[0-9A-F]{6}$/i) ? textColor : '#24853c'} // Use synced default
-              onChange={handleTextColorPickerChange}
+              value={textColor.match(/^#[0-9A-F]{6}$/i) ? textColor : (defaultStyles.textColor ?? '#c6d3e2')} // Use default fallback
+              onChange={handleColorPickerChange(setTextColor)} // Use generic handler
               className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
             />
             <input
               type="text"
               id="textColorText"
               value={textColor}
-              onChange={handleTextColorTextChange}
+              onChange={handleColorTextChange(setTextColor)} // Use generic handler
               className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               placeholder="#rrggbb"
               maxLength={7}
@@ -394,16 +383,24 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
                     This paragraph text uses the main text color.
                 </p>
             </div>
-        </div>
+         </div>
 
-        {/* Restore Save Button */}
-        <div className="pt-4">
+        {/* Action Buttons: Save and Reset */}
+        <div className="pt-4 flex space-x-2"> {/* Use flex container */}
           <button
             onClick={handleSaveStyles}
             disabled={isSaving || isLoading} // Disable if loading or saving
             className={`px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isSaving || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isSaving ? 'Saving...' : 'Save Styles'}
+          </button>
+          {/* Add Reset Button */}
+          <button
+            onClick={handleResetToDefaults}
+            disabled={isSaving || isLoading} // Also disable during save/load
+            className={`px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 ${isSaving || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            Reset to Defaults
           </button>
         </div>
       </div>
