@@ -57,8 +57,8 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
       }
   };
 
-  // Specific handler for Font Family (as it's not a color)
-  const handleFontFamilyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Specific handler for Font Family (updated for select dropdown)
+  const handleFontFamilyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFontFamily(e.target.value);
   };
   // --- End Optimized Handlers ---
@@ -264,15 +264,21 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
           <label htmlFor="fontFamily" className="block text-sm font-medium text-gray-700 mb-1">
             Font Family
           </label>
-          <input
-            type="text"
+          <select
             id="fontFamily"
             value={fontFamily}
             onChange={handleFontFamilyChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            placeholder="e.g., 'Arial, sans-serif', 'Roboto, sans-serif'"
-          />
-           <p className="mt-1 text-xs text-gray-500">Enter a valid CSS font-family value.</p>
+          >
+            <option value="'Noto Sans', sans-serif">'Noto Sans', sans-serif</option>
+            <option value="'Arial', sans-serif">'Arial', sans-serif</option>
+            <option value="'Verdana', sans-serif">'Verdana', sans-serif</option>
+            <option value="'Georgia', serif">'Georgia', serif</option>
+            <option value="'Times New Roman', serif">'Times New Roman', serif</option>
+            <option value="'Inconsolata', monospace">'Inconsolata', monospace</option>
+            {/* Add more fonts as needed */}
+          </select>
+           <p className="mt-1 text-xs text-gray-500">Select a font family from the list.</p>
          </div>
 
         {/* --- Add New Color Inputs --- */}
