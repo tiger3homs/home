@@ -7,6 +7,9 @@
 :root {
   --primary-color: #007bff; /* Default primary color */
   --secondary-color: #6c757d; /* Default secondary color */
+  --title-color: #ffffff; /* Default title color */
+  --h3title-color: #b91212; /* Default h3title color */
+  --text-color: #24853c; /* Default text color */
   --font-family: 'Noto Sans', sans-serif; /* Default font */
 }
 

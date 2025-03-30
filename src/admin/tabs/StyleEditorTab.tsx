@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; // Restore Firestore imports
 import { db } from '../../firebaseConfig'; // Import Firestore instance
 
-// Restore StyleData interface
+// Update StyleData interface
 interface StyleData {
   primaryColor: string;
   secondaryColor: string;
   fontFamily: string;
+  titleColor?: string; // Added optional titleColor
+  h3TitleColor?: string; // Added optional h3TitleColor
+  textColor?: string; // Added optional textColor
 }
 
 interface StyleEditorTabProps {
@@ -15,11 +18,15 @@ interface StyleEditorTabProps {
 
 const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
   // State for style properties - Keep these
-  const [primaryColor, setPrimaryColor] = useState('#007bff'); // Default values
+  const [primaryColor, setPrimaryColor] = useState('#007bff');
   const [secondaryColor, setSecondaryColor] = useState('#6c757d');
-  const [fontFamily, setFontFamily] = useState("'Noto Sans', sans-serif"); // Match initial CSS
-  const [isLoading, setIsLoading] = useState(true); // Keep isLoading state
-  const [isSaving, setIsSaving] = useState(false); // Restore isSaving state
+  const [fontFamily, setFontFamily] = useState("'Noto Sans', sans-serif");
+  // Add state for new colors with defaults synced from index.css
+  const [titleColor, setTitleColor] = useState('#ffffff'); // Synced from index.css
+  const [h3TitleColor, setH3TitleColor] = useState('#b91212'); // Synced from index.css
+  const [textColor, setTextColor] = useState('#24853c'); // Synced from index.css
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // --- Input Change Handlers - Keep these ---
   const isValidHexColor = (color: string): boolean => /^#[0-9A-F]{6}$/i.test(color);
@@ -52,7 +59,41 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
   const handleFontFamilyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFontFamily(e.target.value);
   };
-  // --- End Handlers ---
+
+  // --- Add Handlers for New Colors ---
+  // Title Color
+  const handleTitleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitleColor(e.target.value);
+  };
+  const handleTitleColorTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (isValidHexColor(newValue) || newValue === '' || newValue === '#') {
+       setTitleColor(newValue);
+    }
+  };
+
+  // H3 Title Color
+  const handleH3TitleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setH3TitleColor(e.target.value);
+  };
+  const handleH3TitleColorTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (isValidHexColor(newValue) || newValue === '' || newValue === '#') {
+       setH3TitleColor(newValue);
+    }
+  };
+
+  // Text Color
+  const handleTextColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTextColor(e.target.value);
+  };
+  const handleTextColorTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (isValidHexColor(newValue) || newValue === '' || newValue === '#') {
+       setTextColor(newValue);
+    }
+  };
+  // --- End New Handlers ---
 
   // Firestore document reference will be created inside useEffect now
 
@@ -79,13 +120,17 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
         if (docSnap.exists()) {
           console.log('loadStyles Function: Document exists. Data:', docSnap.data()); // Log if doc exists
           const data = docSnap.data() as StyleData;
-          setPrimaryColor(data.primaryColor);
-          setSecondaryColor(data.secondaryColor);
-          setFontFamily(data.fontFamily);
+          setPrimaryColor(data.primaryColor || '#007bff'); // Fallback to default if missing
+          setSecondaryColor(data.secondaryColor || '#6c757d');
+          setFontFamily(data.fontFamily || "'Noto Sans', sans-serif");
+          // Load new colors, providing defaults if they don't exist yet
+          setTitleColor(data.titleColor || '#ffffff'); // Use synced default
+          setH3TitleColor(data.h3TitleColor || '#b91212'); // Use synced default
+          setTextColor(data.textColor || '#24853c'); // Use synced default
         } else {
-          console.log("loadStyles Function: No style document found, using defaults.");
+          console.log("loadStyles Function: No style document found, using defaults for all styles.");
           // Optionally save defaults if not found
-          // await setDoc(stylesDocRefInsideEffect, { primaryColor, secondaryColor, fontFamily });
+          // await setDoc(stylesDocRefInsideEffect, { primaryColor, secondaryColor, fontFamily, titleColor, h3TitleColor, textColor });
         }
       } catch (error) {
         console.error("loadStyles Function: Error during getDoc or processing:", error); // More specific error log
@@ -108,14 +153,19 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     // Ensure colors are valid before setting CSS variables
     const validPrimary = primaryColor.match(/^#[0-9A-F]{6}$/i) ? primaryColor : '#000000';
     const validSecondary = secondaryColor.match(/^#[0-9A-F]{6}$/i) ? secondaryColor : '#000000';
+    const validTitle = titleColor.match(/^#[0-9A-F]{6}$/i) ? titleColor : '#ffffff'; // Use synced default
+    const validH3Title = h3TitleColor.match(/^#[0-9A-F]{6}$/i) ? h3TitleColor : '#b91212'; // Use synced default
+    const validText = textColor.match(/^#[0-9A-F]{6}$/i) ? textColor : '#24853c'; // Use synced default
+
     document.documentElement.style.setProperty('--primary-color', validPrimary);
     document.documentElement.style.setProperty('--secondary-color', validSecondary);
     document.documentElement.style.setProperty('--font-family', fontFamily);
+    // Apply new colors
+    document.documentElement.style.setProperty('--title-color', validTitle);
+    document.documentElement.style.setProperty('--h3title-color', validH3Title); // Note: CSS variable name is --h3title-color
+    document.documentElement.style.setProperty('--text-color', validText);
   }
-    // No timer cleanup needed now
-    // We apply styles *only* when not loading. If loading, we wait.
-    // If already loaded, any change to colors/font triggers an update.
-  }, [primaryColor, secondaryColor, fontFamily, isLoading]);
+  }, [primaryColor, secondaryColor, fontFamily, titleColor, h3TitleColor, textColor, isLoading]); // Add new dependencies
 
 
   // Restore handleSaveStyles function with added logging
@@ -133,15 +183,22 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     if (!stylesDocRefForSave) { // This check will likely never fail if db check passes
       console.error("Save Error: Failed to create doc reference.");
       alert('Error: Cannot save styles. Failed to create reference.');
-      return;
+       return;
     }
     setIsSaving(true);
-    console.log('Attempting to save styles to Firestore:', { primaryColor, secondaryColor, fontFamily });
+    const stylesToSave: StyleData = {
+        primaryColor,
+        secondaryColor,
+        fontFamily,
+        titleColor,
+        h3TitleColor,
+        textColor
+    };
+    console.log('Attempting to save styles to Firestore:', stylesToSave);
     try {
-      const stylesToSave: StyleData = { primaryColor, secondaryColor, fontFamily };
-      await setDoc(stylesDocRefForSave, stylesToSave); // Use the ref created for saving
+      await setDoc(stylesDocRefForSave, stylesToSave);
       console.log('Firestore save successful:', stylesToSave);
-      alert('Styles saved successfully!'); // User feedback
+      alert('Styles saved successfully!');
     } catch (error) {
       console.error("Firestore save error:", error); // Log the specific error
       alert(`Failed to save styles. Error: ${error instanceof Error ? error.message : String(error)}`); // Show error details
@@ -228,7 +285,85 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
            <p className="mt-1 text-xs text-gray-500">Enter a valid CSS font-family value.</p>
          </div>
 
-        {/* Preview Section - Keep this */}
+        {/* --- Add New Color Inputs --- */}
+        {/* Title Color */}
+        <div>
+          <label htmlFor="titleColorText" className="block text-sm font-medium text-gray-700 mb-1">
+            Title Color (h2)
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              id="titleColorPicker"
+              value={titleColor.match(/^#[0-9A-F]{6}$/i) ? titleColor : '#ffffff'} // Use synced default
+              onChange={handleTitleColorPickerChange}
+              className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              id="titleColorText"
+              value={titleColor}
+              onChange={handleTitleColorTextChange}
+              className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="#rrggbb"
+              maxLength={7}
+            />
+          </div>
+        </div>
+
+        {/* H3 Title Color */}
+        <div>
+          <label htmlFor="h3TitleColorText" className="block text-sm font-medium text-gray-700 mb-1">
+            Sub-Title Color (h3)
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              id="h3TitleColorPicker"
+              value={h3TitleColor.match(/^#[0-9A-F]{6}$/i) ? h3TitleColor : '#b91212'} // Use synced default
+              onChange={handleH3TitleColorPickerChange}
+              className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              id="h3TitleColorText"
+              value={h3TitleColor}
+              onChange={handleH3TitleColorTextChange}
+              className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="#rrggbb"
+              maxLength={7}
+            />
+          </div>
+        </div>
+
+        {/* Text Color */}
+        <div>
+          <label htmlFor="textColorText" className="block text-sm font-medium text-gray-700 mb-1">
+            Text Color (p, label)
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              id="textColorPicker"
+              value={textColor.match(/^#[0-9A-F]{6}$/i) ? textColor : '#24853c'} // Use synced default
+              onChange={handleTextColorPickerChange}
+              className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              id="textColorText"
+              value={textColor}
+              onChange={handleTextColorTextChange}
+              className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="#rrggbb"
+              maxLength={7}
+            />
+          </div>
+        </div>
+        {/* --- End New Color Inputs --- */}
+
+
+        {/* Preview Section - Update this */}
         <div className="mt-6 p-4 border border-gray-300 rounded">
             <h5 className="text-md font-medium mb-3">Preview</h5>
             {/* Use state directly for preview in this simplified version */}
@@ -251,6 +386,12 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
                 </p>
                 <p style={{ color: secondaryColor }} className="mt-1">
                     This text uses the secondary color.
+                </p>
+                {/* Add previews for new colors */}
+                <h2 style={{ color: titleColor }} className="text-lg font-semibold mt-3">Preview Title (h2)</h2>
+                <h3 style={{ color: h3TitleColor }} className="text-md font-semibold mt-1">Preview Sub-Title (h3)</h3>
+                <p style={{ color: textColor }} className="mt-1">
+                    This paragraph text uses the main text color.
                 </p>
             </div>
         </div>

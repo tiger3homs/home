@@ -24,10 +24,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
   return (
     <section className="container mx-auto px-4 py-16 bg-gray-800/50">
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-8">{t.title}</h2>
+        <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'var(--title-color)' }}>{t.title}</h2>
         <form onSubmit={handleSubmit} className="mt-8">
           <div className="mb-4">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-300" style={{ color: 'var(--text-color)' }} >
               {t.nameLabel}
             </label>
             <input
@@ -45,7 +45,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300" style={{ color: 'var(--text-color)' }} >
               {t.emailLabel}
             </label>
             <input
@@ -63,7 +63,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="message" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="message" className="block text-sm font-medium text-gray-300" style={{ color: 'var(--text-color)' }} >
               {t.messageLabel}
             </label>
             <textarea

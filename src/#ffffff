@@ -145,7 +145,7 @@ const MainSite = () => {
 
     try {
       emailjs.init("skwn_-DYfDakGK644");
-
+      
       await emailjs.send(
         "service_bdj14o3",
         "template_2e2nikq",
@@ -197,16 +197,16 @@ const MainSite = () => {
         <div className="max-w-3xl mx-auto text-center">
           <Logo logoUrl={t.generalInfo.logoUrl} />
           {/* Use text-primary for the main title */}
-          <h1
-            className="text-4xl md:text-6xl font-bold mb-6 text-primary"
+          <h1 
+            className="text-4xl md:text-6xl font-bold mb-6 text-primary" 
             style={{ pointerEvents: 'none', userSelect: 'none' }}
           >
             {t.generalInfo.siteTitle}
           </h1>
           {/* Use text-secondary or a lighter gray for subtitle? Let's try text-secondary */}
-          <p
-            className="text-xl md:text-2xl text-secondary mb-8"
-            style={{ pointerEvents: 'none', userSelect: 'none', color: 'var(--text-color)' }}
+          <p 
+            className="text-xl md:text-2xl text-secondary mb-8" 
+            style={{ pointerEvents: 'none', userSelect: 'none', color: 'var(--secondary-color)' }}
           >
             {t.generalInfo.siteRole}
           </p>
@@ -214,8 +214,8 @@ const MainSite = () => {
             {socialLinks.map((link) => {
               const IconComponent = iconComponents[link.icon];
               return IconComponent ? (
-                <a
-                  key={link.id}
+                <a 
+                  key={link.id} 
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -232,9 +232,9 @@ const MainSite = () => {
       </header>
 
       <Suspense fallback={LoadingFallback}>
-        <ProjectsSection
-          title={projectsData.title}
-          projects={projectsData.projects}
+        <ProjectsSection 
+          title={projectsData.title} 
+          projects={projectsData.projects} 
         />
       </Suspense>
 
@@ -250,9 +250,9 @@ const MainSite = () => {
       </section>
 
       <Suspense fallback={LoadingFallback}>
-        <ServicesSection
-          title={t.services.title}
-          services={t.services.list}
+        <ServicesSection 
+          title={t.services.title} 
+          services={t.services.list} 
         />
       </Suspense>
 
@@ -284,9 +284,6 @@ interface StyleData {
   primaryColor: string;
   secondaryColor: string;
   fontFamily: string;
-  titleColor?: string; // Added optional titleColor
-  h3TitleColor?: string; // Added optional h3TitleColor
-  textColor?: string; // Added optional textColor
 }
 
 function App() {
@@ -310,16 +307,6 @@ function App() {
           document.documentElement.style.setProperty('--primary-color', data.primaryColor);
           document.documentElement.style.setProperty('--secondary-color', data.secondaryColor);
           document.documentElement.style.setProperty('--font-family', data.fontFamily);
-          // Apply new colors if they exist in Firestore
-          if (data.titleColor) {
-            document.documentElement.style.setProperty('--title-color', data.titleColor);
-          }
-          if (data.h3TitleColor) {
-            document.documentElement.style.setProperty('--h3title-color', data.h3TitleColor);
-          }
-          if (data.textColor) {
-            document.documentElement.style.setProperty('--text-color', data.textColor);
-          }
           console.log('App.tsx: Global styles applied from Firestore:', data);
         } else {
           // Styles not found in Firestore, defaults from index.css will be used.
@@ -339,13 +326,13 @@ function App() {
       <Routes>
         <Route path="/" element={<MainSite />} />
         <Route path="/admin/login" element={<LoginPage />} />
-        <Route
-          path="/admin/dashboard"
+        <Route 
+          path="/admin/dashboard" 
           element={
             <ProtectedRoute>
               <AdminDashboard />
             </ProtectedRoute>
-          }
+          } 
         />
         <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
       </Routes>

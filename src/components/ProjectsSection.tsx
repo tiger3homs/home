@@ -16,7 +16,7 @@ interface ProjectsSectionProps {
 const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) => {
   return (
     <section className="container mx-auto px-4 py-16">
-      <h2 className="text-3xl font-bold text-center mb-12">{title}</h2>
+      <h2 className="text-3xl font-bold text-center mb-12" style={{ color: 'var(--title-color)' }}>{title}</h2>
       <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {projects.map((project, index) => {
           const ProjectContent = (
@@ -28,8 +28,8 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) =>
                   <ExternalLink size={20} className="text-gray-500" />
                 )}
               </div>
-              <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
-              <p className="text-gray-400">{project.description}</p>
+              <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--h3title-color)' }}>{project.title}</h3>
+              <p className="text-gray-400" style={{ color: 'var(--text-color)' }} >{project.description}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {project.tags.map((tag, tagIndex) => (
                   <span key={tagIndex} className="px-3 py-1 bg-blue-900 rounded-full text-sm">{tag}</span>
