@@ -447,12 +447,25 @@ const AdminDashboard: React.FC = () => {
       {/* Tabs Navigation */}
       <div className="mb-6 border-b border-gray-300">
         <nav className="-mb-px flex space-x-4 sm:space-x-6 overflow-x-auto pb-px" aria-label="Tabs">
-          {/* Dynamic tabs */}
-          {contentSections.map((sectionKey) => {
-             // Use type assertion here as we know sectionKey comes from Object.keys(translations.en)
-             const key = sectionKey as TranslationSectionKey;
-             // Use the static helper function for the tab button text
-             const staticTabTitle = getStaticSectionName(key);
+          {/* Render tabs in specific order */}
+          {['generalInfo', 'socialLinks', 'projects', 'about', 'services', 'contact', 'styleEditor'].map((key) => {
+            let tabTitle: string;
+            let isStatic = false;
+
+            if (key === 'styleEditor') {
+              tabTitle = 'Style Editor';
+              isStatic = true;
+            } else if (key === 'socialLinks') {
+              tabTitle = 'Social Links';
+              isStatic = true;
+            } else if (isValidTranslationKey(key)) {
+              // Use the static helper function for dynamic tabs
+              tabTitle = getStaticSectionName(key);
+            } else {
+              // Skip rendering if the key is invalid (shouldn't happen with the hardcoded array)
+              return null;
+            }
+
             return (
               <button
                 key={key}
@@ -464,35 +477,10 @@ const AdminDashboard: React.FC = () => {
                 } whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm capitalize transition-colors duration-150`}
                 aria-current={activeTab === key ? 'page' : undefined}
               >
-                {staticTabTitle}
+                {tabTitle}
               </button>
             );
           })}
-          {/* Static tabs */}
-          <button
-            key="styleEditor"
-            onClick={() => setActiveTab('styleEditor')}
-            className={`${
-              activeTab === 'styleEditor'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm capitalize transition-colors duration-150`}
-            aria-current={activeTab === 'styleEditor' ? 'page' : undefined}
-          >
-            Style Editor
-          </button>
-          <button
-            key="socialLinks"
-            onClick={() => setActiveTab('socialLinks')}
-            className={`${
-              activeTab === 'socialLinks'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm capitalize transition-colors duration-150`}
-            aria-current={activeTab === 'socialLinks' ? 'page' : undefined}
-          >
-            Social Links
-          </button>
         </nav>
       </div>
 
