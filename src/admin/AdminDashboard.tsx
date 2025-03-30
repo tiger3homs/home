@@ -1,7 +1,9 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react'; // Added useEffect
 import { useNavigate } from 'react-router-dom';
 import { signOut } from "firebase/auth";
-import { auth } from '../firebaseConfig';
+// Replace database imports with Firestore imports
+import { doc, setDoc, onSnapshot, getDoc } from "firebase/firestore";
+import { auth, db } from '../firebaseConfig'; // Import db (which is Firestore)
 import { translations as defaultTranslations } from '../translations';
 import ProjectsTab from './tabs/ProjectsTab';
 import ServicesTab from './tabs/ServicesTab';
@@ -20,21 +22,14 @@ const newServiceTemplate: ServiceItem = {
 // Define the type for the keys of the 'en' object in translations
 type TranslationSectionKey = keyof typeof defaultTranslations.en;
 
+// Define Firestore document path
+const TRANSLATIONS_DOC_PATH = 'translations/en';
+
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [translations, setTranslations] = useState<TranslationsType>(() => {
-    const savedTranslations = localStorage.getItem('siteTranslations');
-    try {
-      // Ensure the parsed data conforms to the expected structure, merge if necessary
-      const parsed = savedTranslations ? JSON.parse(savedTranslations) : {};
-      // Simple merge, prioritizing saved data but ensuring all default keys exist
-      // A more robust merge might be needed for deeply nested structures if defaults change often
-      return { en: { ...defaultTranslations.en, ...(parsed.en || {}) } };
-    } catch (e) {
-      console.error("Failed to parse translations from localStorage", e);
-      return defaultTranslations; // Fallback to defaults on error
-    }
-  });
+  // Initialize with default translations, will be overwritten by Firebase data
+  const [translations, setTranslations] = useState<TranslationsType>(defaultTranslations);
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
   const [saveStatus, setSaveStatus] = useState('');
   const [logoutError, setLogoutError] = useState('');
   const [activeTab, setActiveTab] = useState<string | null>(null);
@@ -52,7 +47,47 @@ const AdminDashboard: React.FC = () => {
       return keys;
     }
     return [];
-  }, [translations]); // Dependency is correct
+  }, [translations, activeTab]); // Added activeTab dependency for initial setting
+
+  // Effect to fetch data from Firestore on mount and listen for changes
+  useEffect(() => {
+    if (!db) { // db is Firestore instance here
+      console.error("Firestore instance is not available.");
+      setSaveStatus("Error: Firestore connection failed.");
+      setIsLoading(false);
+      return;
+    }
+    // Get a reference to the Firestore document
+    const translationsDocRef = doc(db, TRANSLATIONS_DOC_PATH);
+    setIsLoading(true);
+
+    // Use onSnapshot for real-time updates
+    const unsubscribe = onSnapshot(translationsDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Merge fetched data with defaults
+        setTranslations(prev => ({
+          ...prev,
+          en: { ...defaultTranslations.en, ...data }
+        }));
+      } else {
+        // Document doesn't exist, use defaults
+        setTranslations(defaultTranslations);
+        console.log("No translations document found in Firestore, using defaults.");
+        // Optionally create the document with defaults here
+        // setDoc(translationsDocRef, defaultTranslations.en);
+      }
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Firestore snapshot error:", error);
+      setSaveStatus("Error fetching data from Firestore.");
+      setIsLoading(false);
+      // Keep existing state or fallback to defaults? For now, keep state.
+    });
+
+    // Cleanup listener on unmount
+    return () => unsubscribe(); // onSnapshot returns the unsubscribe function directly
+  }, []); // Empty dependency array ensures this runs only on mount and unmount
 
   const handleLogout = async () => {
     setLogoutError('');
@@ -185,37 +220,50 @@ const AdminDashboard: React.FC = () => {
 }, []);
 
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
+    if (!db) { // db is Firestore instance
+      setSaveStatus("Error: Firestore connection failed.");
+      return;
+    }
+    setSaveStatus('Saving...');
     try {
-      localStorage.setItem('siteTranslations', JSON.stringify(translations));
+      // Get a reference to the Firestore document and save the 'en' data
+      const translationsDocRef = doc(db, TRANSLATIONS_DOC_PATH);
+      await setDoc(translationsDocRef, translations.en, { merge: true }); // Use merge: true to avoid overwriting fields not present in local state if needed, or false/omit to overwrite completely
       setSaveStatus('Content changes saved successfully!');
       setTimeout(() => setSaveStatus(''), 3000);
-    } catch (e) {
-      console.error("Failed to save translations to localStorage", e);
+    } catch (error) {
+      console.error("Failed to save translations to Firestore:", error);
       setSaveStatus('Error saving content changes.');
+      setTimeout(() => setSaveStatus(''), 5000); // Keep error message longer
     }
   };
 
-  const resetToDefaults = () => {
+  const resetToDefaults = async () => {
+     if (!db) { // db is Firestore instance
+      setSaveStatus("Error: Firestore connection failed.");
+      return;
+    }
     if (window.confirm('Are you sure you want to reset the English text content (About, Contact, Services, General Info) to the default values? This cannot be undone and does not affect Projects, Styles, or Social Links.')) {
-      // Reset only specific sections, preserving others like projects
-      const currentProjects = translations.en.projects; // Keep existing projects
-      setTranslations(prev => ({
-        ...prev, // Keep other languages if any
-        en: {
-          ...defaultTranslations.en, // Reset base sections
-          projects: currentProjects // Restore projects
-        }
-      }));
-      // Save the selectively reset state
-      localStorage.setItem('siteTranslations', JSON.stringify({
-         en: {
-          ...defaultTranslations.en,
-          projects: currentProjects
-        }
-      }));
-      setSaveStatus('Text content sections reset to defaults.');
-      setTimeout(() => setSaveStatus(''), 3000);
+      setSaveStatus('Resetting...');
+      // Prepare the data to be saved: defaults for most, but keep existing projects
+      const dataToSave = {
+        ...defaultTranslations.en, // Start with all defaults
+        projects: translations.en.projects // Overwrite with current projects
+      };
+
+      try {
+        // Get a reference to the Firestore document and overwrite with the reset data
+        const translationsDocRef = doc(db, TRANSLATIONS_DOC_PATH);
+        await setDoc(translationsDocRef, dataToSave); // Overwrite the document
+        // The onSnapshot listener should automatically update the local state
+        setSaveStatus('Text content sections reset to defaults.');
+        setTimeout(() => setSaveStatus(''), 3000);
+      } catch (error) {
+        console.error("Failed to reset translations in Firestore:", error);
+        setSaveStatus('Error resetting content.');
+        setTimeout(() => setSaveStatus(''), 5000);
+      }
     }
   };
 
@@ -226,7 +274,13 @@ const AdminDashboard: React.FC = () => {
   };
 
   const renderActiveTabContent = () => {
+    // Show loading indicator while fetching initial data
+    if (isLoading) {
+      return <p className="text-gray-500 text-center py-10">Loading content...</p>;
+    }
+
     if (!activeTab) {
+      // If still no active tab after loading, prompt selection
       return <p className="text-gray-500">Select a section above to start editing.</p>;
     }
 

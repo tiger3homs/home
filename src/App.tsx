@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Github, Facebook, Mail, Instagram, Linkedin, Twitter, Icon as LucideIcon } from 'lucide-react'; // Added more icons
 import emailjs from 'emailjs-com';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, collection, getDocs, query, orderBy } from 'firebase/firestore'; // Import Firestore functions
+import { doc, getDoc, onSnapshot, collection, getDocs, query, orderBy } from 'firebase/firestore'; // Import Firestore functions & onSnapshot
 import { auth, db } from './firebaseConfig'; // Import db
 import { translations as defaultTranslations } from './translations';
 import LoginPage from './admin/LoginPage';
@@ -79,35 +79,46 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const MainSite = () => {
-  const [siteTranslations, setSiteTranslations] = useState<TranslationsType>(() => {
-    const saved = localStorage.getItem('siteTranslations');
-    try {
-      return saved ? JSON.parse(saved) : defaultTranslations;
-    } catch (e) {
-      console.error("Failed to parse translations from localStorage on main site", e);
-      return defaultTranslations;
-    }
-  });
+  // State for translations, initialized with defaults, fetched from Firestore
+  const [siteTranslations, setSiteTranslations] = useState<TranslationsType>(defaultTranslations);
+  const [isLoadingTranslations, setIsLoadingTranslations] = useState(true); // Loading state for translations
 
+  // Fetch translations from Firestore in real-time
   useEffect(() => {
-    const handleStorageChange = () => {
-      const saved = localStorage.getItem('siteTranslations');
-      try {
-        setSiteTranslations(saved ? JSON.parse(saved) : defaultTranslations);
-      } catch (e) {
-        console.error("Failed to parse translations from localStorage on storage event", e);
+    if (!db) {
+      console.error("MainSite: Firestore instance is not available.");
+      setIsLoadingTranslations(false);
+      return;
+    }
+    const translationsDocRef = doc(db, 'translations/en');
+    setIsLoadingTranslations(true);
+
+    const unsubscribe = onSnapshot(translationsDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Merge fetched data with defaults to ensure all keys exist
+        setSiteTranslations(prev => ({
+          ...prev, // Keep other languages if any
+          en: { ...defaultTranslations.en, ...data } // Merge 'en' data
+        }));
+      } else {
+        // Document doesn't exist, use defaults
         setSiteTranslations(defaultTranslations);
+        console.log("MainSite: No translations document found in Firestore, using defaults.");
       }
-    };
+      setIsLoadingTranslations(false);
+    }, (error) => {
+      console.error("MainSite: Firestore snapshot error:", error);
+      // Optionally fallback to defaults or keep previous state on error
+      setSiteTranslations(defaultTranslations); // Fallback to defaults on error
+      setIsLoadingTranslations(false);
+    });
 
-    window.addEventListener('storage', handleStorageChange);
-    handleStorageChange();
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, []); // Empty dependency array ensures this runs only on mount
 
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
+  // Memoize the 'en' translations object
   const t = useMemo(() => siteTranslations.en, [siteTranslations]);
 
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
@@ -190,6 +201,11 @@ const MainSite = () => {
   const LoadingFallback = <div className="flex items-center justify-center p-8">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
   </div>;
+
+  // Show loading indicator while translations are being fetched
+  if (isLoadingTranslations) {
+    return <div className="flex items-center justify-center min-h-screen bg-gray-900"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div></div>;
+  }
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ltr`}>
