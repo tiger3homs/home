@@ -38,7 +38,7 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
         handleChange,
         editingPath,
         setEditingPath,
-        undefined, // No special add button for services in this example
+        undefined,
         handleDelete // Pass delete handler
       )}
     </>

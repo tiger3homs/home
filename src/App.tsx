@@ -1,9 +1,10 @@
-import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react'; // Import React
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { Github, Facebook, Mail, Instagram } from 'lucide-react';
+import { Github, Facebook, Mail, Instagram, Linkedin, Twitter, Icon as LucideIcon } from 'lucide-react'; // Added more icons
 import emailjs from 'emailjs-com';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from './firebaseConfig';
+import { doc, getDoc, collection, getDocs, query, orderBy } from 'firebase/firestore'; // Import Firestore functions
+import { auth, db } from './firebaseConfig'; // Import db
 import { translations as defaultTranslations } from './translations';
 import LoginPage from './admin/LoginPage';
 import AdminDashboard from './admin/AdminDashboard';
@@ -24,6 +25,26 @@ const validateEmail = (email: string): boolean => {
 
 const validateMessage = (message: string): boolean => {
   return message.length >= 10 && message.length <= 1000;
+};
+
+// Define the structure for social links fetched from Firestore
+interface SocialLink {
+  id: string;
+  name: string;
+  url: string;
+  icon: string; // Name of the icon (e.g., "Github", "Mail")
+  order: number; // Added for ordering
+}
+
+// Map icon names to Lucide components
+const iconComponents: { [key: string]: React.ComponentType<{ size?: number | string }> } = {
+  Github,
+  Facebook,
+  Mail,
+  Instagram,
+  Linkedin,
+  Twitter,
+  // Add more icons here as needed
 };
 
 type TranslationsType = typeof defaultTranslations;
@@ -89,6 +110,7 @@ const MainSite = () => {
 
   const t = useMemo(() => siteTranslations.en, [siteTranslations]);
 
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -143,6 +165,26 @@ const MainSite = () => {
     }
   }, [formData]);
 
+  // Fetch social links from Firestore
+  useEffect(() => {
+    const fetchSocialLinks = async () => {
+      if (!db) return;
+      try {
+        const linksCollection = collection(db, 'socialLinks');
+        const q = query(linksCollection, orderBy('order', 'asc')); // Order by the 'order' field
+        const querySnapshot = await getDocs(q);
+        const links = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SocialLink));
+        setSocialLinks(links);
+      } catch (error) {
+        console.error("Error fetching social links:", error);
+        // Optionally set default links or show an error
+      }
+    };
+
+    fetchSocialLinks();
+  }, []);
+
+
   const projectsData = useMemo(() => defaultGetProjectsData(siteTranslations), [siteTranslations]);
 
   const LoadingFallback = <div className="flex items-center justify-center p-8">
@@ -154,31 +196,37 @@ const MainSite = () => {
       <header className="container mx-auto px-4 py-16 md:py-32">
         <div className="max-w-3xl mx-auto text-center">
           <Logo logoUrl={t.generalInfo.logoUrl} />
+          {/* Use text-primary for the main title */}
           <h1 
-            className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600" 
+            className="text-4xl md:text-6xl font-bold mb-6 text-primary" 
             style={{ pointerEvents: 'none', userSelect: 'none' }}
           >
             {t.generalInfo.siteTitle}
           </h1>
+          {/* Use text-secondary or a lighter gray for subtitle? Let's try text-secondary */}
           <p 
-            className="text-xl md:text-2xl text-gray-300 mb-8" 
+            className="text-xl md:text-2xl text-secondary mb-8" 
             style={{ pointerEvents: 'none', userSelect: 'none' }}
           >
             {t.generalInfo.siteRole}
           </p>
           <div className="flex justify-center space-x-6">
-            <a href="https://github.com/tiger3homs" className="hover:text-blue-400 transition-colors transform hover:scale-110">
-              <Github size={24} />
-            </a>
-            <a href="mailto:tiger3homs@gmail.com" className="hover:text-blue-400 transition-colors transform hover:scale-110">
-              <Mail size={24} />
-            </a>
-            <a href="https://facebook.com/tiger3homs" className="hover:text-blue-400 transition-colors transform hover:scale-110">
-              <Facebook size={24} />
-            </a>
-            <a href="https://instagram.com/obajda.s" className="hover:text-blue-400 transition-colors transform hover:scale-110">
-              <Instagram size={24} />
-            </a>
+            {socialLinks.map((link) => {
+              const IconComponent = iconComponents[link.icon];
+              return IconComponent ? (
+                <a 
+                  key={link.id} 
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={link.name}
+                  // Use text-secondary for base, hover:text-primary for social links
+                  className="text-secondary hover:text-primary transition-colors transform hover:scale-110"
+                >
+                  <IconComponent size={24} />
+                </a>
+              ) : null; // Render nothing if icon name is not found
+            })}
           </div>
         </div>
       </header>
@@ -192,8 +240,10 @@ const MainSite = () => {
 
       <section className="container mx-auto px-4 py-16 bg-gray-800/50 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">{t.about.title}</h2>
-          <p className="text-gray-300 text-lg leading-relaxed">
+          {/* Use text-primary for the About title */}
+          <h2 className="text-3xl font-bold text-center mb-8 text-primary">{t.about.title}</h2>
+          {/* Use text-secondary or a lighter gray for About text */}
+          <p className="text-secondary text-lg leading-relaxed">
             {t.about.description}
           </p>
         </div>
@@ -215,10 +265,12 @@ const MainSite = () => {
         />
       </Suspense>
 
-      <footer className="container mx-auto px-4 py-8 text-center text-gray-400">
+      {/* Use text-secondary for footer text */}
+      <footer className="container mx-auto px-4 py-8 text-center text-secondary">
         <p>{t.generalInfo.footerText}</p>
         <div className="mt-4">
-          <Link to="/admin/dashboard" className="text-sm text-gray-500 hover:text-blue-400 transition-colors">
+          {/* Use text-secondary and hover:text-primary for footer link */}
+          <Link to="/admin/dashboard" className="text-sm text-secondary hover:text-primary transition-colors">
             Admin Dashboard
           </Link>
         </div>
@@ -227,8 +279,47 @@ const MainSite = () => {
   );
 };
 
+// Define the structure for style data fetched from Firestore
+interface StyleData {
+  primaryColor: string;
+  secondaryColor: string;
+  fontFamily: string;
+}
+
 function App() {
   const basename = '/home/';
+
+  // Removed the redundant useEffect hook that loaded styles here.
+  // Re-add Effect to load and apply global styles from Firestore on initial App load
+  useEffect(() => {
+    const loadAndApplyStyles = async () => {
+      if (!db) {
+        console.error("App.tsx: Firestore not initialized correctly for loading styles.");
+        return; // Exit if db is not available
+      }
+      const stylesDocRef = doc(db, 'settings', 'styles');
+      try {
+        console.log("App.tsx: Attempting to load global styles...");
+        const docSnap = await getDoc(stylesDocRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data() as StyleData;
+          // Apply fetched styles to the root element
+          document.documentElement.style.setProperty('--primary-color', data.primaryColor);
+          document.documentElement.style.setProperty('--secondary-color', data.secondaryColor);
+          document.documentElement.style.setProperty('--font-family', data.fontFamily);
+          console.log('App.tsx: Global styles applied from Firestore:', data);
+        } else {
+          // Styles not found in Firestore, defaults from index.css will be used.
+          console.log("App.tsx: No global styles document found in Firestore, using CSS defaults.");
+        }
+      } catch (error) {
+        console.error("App.tsx: Error loading global styles from Firestore:", error);
+        // Fallback to CSS defaults in case of error
+      }
+    };
+
+    loadAndApplyStyles();
+  }, []); // Empty dependency array ensures this runs only once on App mount
 
   return (
     <BrowserRouter basename={basename}>

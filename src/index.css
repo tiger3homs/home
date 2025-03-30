@@ -4,19 +4,26 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary-color: #007bff; /* Default primary color */
+  --secondary-color: #6c757d; /* Default secondary color */
+  --font-family: 'Noto Sans', sans-serif; /* Default font */
+}
+
 @layer base {
   body {
     @apply antialiased;
+    font-family: var(--font-family); /* Use the CSS variable */
   }
 
   .rtl {
     direction: rtl;
-    font-family: 'Noto Naskh Arabic', sans-serif;
+    font-family: 'Noto Naskh Arabic', sans-serif; /* Keep specific font for RTL */
   }
 
   .ltr {
     direction: ltr;
-    font-family: 'Noto Sans', sans-serif;
+    /* font-family is now inherited from body */
   }
 }
 
