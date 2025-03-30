@@ -2,7 +2,8 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react'; // Add
 import { useNavigate } from 'react-router-dom';
 import { signOut } from "firebase/auth";
 // Replace database imports with Firestore imports
-import { doc, setDoc, onSnapshot, getDoc } from "firebase/firestore";
+// Add updateDoc and deleteField to the import
+import { doc, setDoc, onSnapshot, getDoc, updateDoc, deleteField } from "firebase/firestore";
 import { auth, db } from '../firebaseConfig'; // Import db (which is Firestore)
 import { translations as defaultTranslations } from '../translations';
 import ProjectsTab from './tabs/ProjectsTab';
@@ -21,6 +22,15 @@ const newServiceTemplate: ServiceItem = {
 
 // Define the type for the keys of the 'en' object in translations
 type TranslationSectionKey = keyof typeof defaultTranslations.en;
+
+// Helper function to get a static display name for a section key
+const getStaticSectionName = (key: string): string => {
+  // Simple formatting: split camelCase and capitalize
+  return key
+    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+    .replace(/^./, (str) => str.toUpperCase()); // Capitalize the first letter
+};
+
 
 // Define Firestore document path
 const TRANSLATIONS_DOC_PATH = 'translations/en';
@@ -65,13 +75,13 @@ const AdminDashboard: React.FC = () => {
     const unsubscribe = onSnapshot(translationsDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        // Merge fetched data with defaults
+        // Directly set the 'en' state from Firestore data, assuming it's the complete source of truth
         setTranslations(prev => ({
-          ...prev,
-          en: { ...defaultTranslations.en, ...data }
+          ...prev, // Keep other potential language keys if structure allows
+          en: data as TranslationsType['en'] // Trust Firestore data for 'en'
         }));
       } else {
-        // Document doesn't exist, use defaults
+        // Document doesn't exist, use defaults (including default 'en')
         setTranslations(defaultTranslations);
         console.log("No translations document found in Firestore, using defaults.");
         // Optionally create the document with defaults here
@@ -172,55 +182,9 @@ const AdminDashboard: React.FC = () => {
   }, [activeTab]); // Dependency on activeTab to potentially switch tabs
 
 
-  // Note: This relies on updateNestedState's logic which uses 'any'
-  // More robust type checking could be added here if needed.
-  const handleDeleteItem = useCallback((pathToDelete: (string | number)[]) => {
-    if (!pathToDelete || pathToDelete.length < 1) {
-        console.error("Invalid path for deletion:", pathToDelete);
-        return;
-    }
-    setTranslations((prev: TranslationsType) => {
-        const newState = JSON.parse(JSON.stringify(prev)); // Deep copy for safety
-        let current: any = newState.en; // Use 'any' for traversal
-
-        // Traverse to the parent object/array
-        for (let i = 0; i < pathToDelete.length - 1; i++) {
-            const key = pathToDelete[i];
-            if (typeof current !== 'object' || current === null || current[key] === undefined) {
-                console.error("Path not found for deletion:", pathToDelete, "at segment", key);
-                return prev; // Return original state if path is invalid
-            }
-            current = current[key];
-        }
-
-        const itemKeyToDelete = pathToDelete[pathToDelete.length - 1];
-
-        // Perform deletion on the parent ('current')
-        if (Array.isArray(current) && typeof itemKeyToDelete === 'number') {
-            if (itemKeyToDelete >= 0 && itemKeyToDelete < current.length) {
-                current.splice(itemKeyToDelete, 1); // Delete from array
-            } else {
-                console.error("Index out of bounds for deletion:", pathToDelete);
-                return prev;
-            }
-        } else if (typeof current === 'object' && current !== null && typeof itemKeyToDelete === 'string') {
-            if (itemKeyToDelete in current) {
-                delete current[itemKeyToDelete]; // Delete from object
-            } else {
-                console.error("Key not found for deletion:", pathToDelete, `Key: ${itemKeyToDelete}`);
-                return prev;
-            }
-        } else {
-            console.error("Cannot delete from target:", current, "at path", pathToDelete);
-            return prev;
-        }
-        return newState;
-    });
-    setSaveStatus('Item deleted. Remember to save changes.');
-}, []);
-
-
-  const saveChanges = async () => {
+  // Modified saveChanges to accept data payload
+  const saveChanges = async (dataToSave?: TranslationsType['en']) => {
+    const data = dataToSave || translations.en; // Use provided data or current state
     if (!db) { // db is Firestore instance
       setSaveStatus("Error: Firestore connection failed.");
       return;
@@ -229,7 +193,8 @@ const AdminDashboard: React.FC = () => {
     try {
       // Get a reference to the Firestore document and save the 'en' data
       const translationsDocRef = doc(db, TRANSLATIONS_DOC_PATH);
-      await setDoc(translationsDocRef, translations.en, { merge: true }); // Use merge: true to avoid overwriting fields not present in local state if needed, or false/omit to overwrite completely
+      // Revert to using merge: true for general saves
+      await setDoc(translationsDocRef, data, { merge: true });
       setSaveStatus('Content changes saved successfully!');
       setTimeout(() => setSaveStatus(''), 3000);
     } catch (error) {
@@ -238,6 +203,95 @@ const AdminDashboard: React.FC = () => {
       setTimeout(() => setSaveStatus(''), 5000); // Keep error message longer
     }
   };
+
+  // New function to handle specific field deletion using updateDoc and FieldValue.delete()
+  const handleFirestoreDelete = async (fieldPath: string) => {
+    if (!db) {
+      setSaveStatus("Error: Firestore connection failed.");
+      return;
+    }
+    setSaveStatus('Deleting item...');
+    const translationsDocRef = doc(db, TRANSLATIONS_DOC_PATH);
+    try {
+      // Use the imported deleteField sentinel
+      await updateDoc(translationsDocRef, {
+        [fieldPath]: deleteField() // Use the deleteField() sentinel function
+      });
+      // Don't set status here, let onSnapshot update trigger potential status changes or rely on UI update
+      // setSaveStatus('Item deleted successfully!'); // Optional: if needed
+      // setTimeout(() => setSaveStatus(''), 3000);
+    } catch (error) {
+      console.error("Failed to delete item from Firestore:", error);
+      setSaveStatus('Error deleting item.');
+      setTimeout(() => setSaveStatus(''), 5000);
+    }
+  };
+
+
+  // Updated handleDeleteItem to handle array deletions (services) and field deletions (projects)
+  const handleDeleteItem = useCallback(async (pathToDelete: (string | number)[]) => { // Make async
+    if (!pathToDelete || pathToDelete.length < 1) {
+        console.error("Invalid path for deletion:", pathToDelete);
+        setSaveStatus('Error: Invalid deletion path.');
+        return;
+    }
+
+    // Check if we are deleting a service item from the list array
+    if (pathToDelete[0] === 'services' && pathToDelete[1] === 'list' && typeof pathToDelete[2] === 'number') {
+        const serviceIndexToDelete = pathToDelete[2];
+
+        // Get the current list from state (more reliable than reading Firestore again immediately)
+        // Use optional chaining in case services or list is missing initially
+        const currentServicesList = translations.en.services?.list;
+
+        if (!Array.isArray(currentServicesList)) {
+            console.error("Cannot delete service item: services.list is not an array or is missing.", currentServicesList);
+            setSaveStatus('Error: Services data structure issue.');
+            return;
+        }
+
+        // Create the new list without the item to delete
+        const updatedServicesList = currentServicesList.filter((_, index) => index !== serviceIndexToDelete);
+
+        // Update Firestore with the modified list
+        if (!db) {
+            setSaveStatus("Error: Firestore connection failed.");
+            return;
+        }
+        setSaveStatus('Deleting service item...');
+        const translationsDocRef = doc(db, TRANSLATIONS_DOC_PATH);
+        try {
+            // Update the specific field 'services.list' with the new array
+            await updateDoc(translationsDocRef, {
+                'services.list': updatedServicesList
+            });
+            // onSnapshot listener will automatically update the local state and UI
+            // setSaveStatus('Service item deleted.'); // Optional status update if needed
+            // setTimeout(() => setSaveStatus(''), 3000);
+        } catch (error) {
+            console.error("Failed to update services list in Firestore:", error);
+            setSaveStatus('Error deleting service item.');
+            setTimeout(() => setSaveStatus(''), 5000);
+        }
+
+    } else {
+        // Handle deletion for other types (e.g., projects) using deleteField
+        const fieldPathString = pathToDelete.join('.');
+        if (!fieldPathString) {
+           console.error("Generated empty field path for deletion:", pathToDelete);
+           setSaveStatus('Error: Could not determine field to delete.');
+           return;
+        }
+        // Call the specific delete function for Firestore fields
+        // Note: handleFirestoreDelete is already async
+        await handleFirestoreDelete(fieldPathString);
+        // Rely on onSnapshot for UI updates
+    }
+
+  // Add dependency on the services list from state to ensure useCallback has the latest list
+  // when creating the filtered array. Also include db reference.
+}, [translations.en.services?.list, db]);
+
 
   const resetToDefaults = async () => {
      if (!db) { // db is Firestore instance
@@ -294,16 +348,13 @@ const AdminDashboard: React.FC = () => {
 
     // Dynamic Tabs - Use type guard
     if (isValidTranslationKey(activeTab)) {
-      // Determine title based on the active tab key
-      const sectionDataForTitle = translations.en[activeTab];
-      const tabTitle = typeof sectionDataForTitle === 'object' && sectionDataForTitle !== null && 'title' in sectionDataForTitle && typeof sectionDataForTitle.title === 'string'
-        ? sectionDataForTitle.title
-        : activeTab.replace(/([A-Z])/g, ' $1');
+      // Use the static helper function for the heading title
+      const staticTabTitle = getStaticSectionName(activeTab);
 
       return (
         <>
           <h3 className="text-xl font-semibold mb-4 text-gray-700 capitalize">
-            Editing: {tabTitle} Content
+            Editing: {staticTabTitle} Content
           </h3>
           {/* Render specific tabs, fetching data within the block for better type inference */}
           {activeTab === 'projects' ? (() => {
@@ -400,10 +451,8 @@ const AdminDashboard: React.FC = () => {
           {contentSections.map((sectionKey) => {
              // Use type assertion here as we know sectionKey comes from Object.keys(translations.en)
              const key = sectionKey as TranslationSectionKey;
-             const tabData = translations.en[key];
-             const tabTitle = typeof tabData === 'object' && tabData !== null && 'title' in tabData && typeof tabData.title === 'string'
-               ? tabData.title
-               : key.replace(/([A-Z])/g, ' $1');
+             // Use the static helper function for the tab button text
+             const staticTabTitle = getStaticSectionName(key);
             return (
               <button
                 key={key}
@@ -415,7 +464,7 @@ const AdminDashboard: React.FC = () => {
                 } whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm capitalize transition-colors duration-150`}
                 aria-current={activeTab === key ? 'page' : undefined}
               >
-                {tabTitle}
+                {staticTabTitle}
               </button>
             );
           })}
@@ -455,8 +504,9 @@ const AdminDashboard: React.FC = () => {
       {/* Save Button Area */}
       <div className="mt-6 text-right flex justify-end items-center gap-4">
         {saveStatus && <span className="text-green-600 text-sm transition-opacity duration-300">{saveStatus}</span>}
+        {/* Wrap saveChanges call in an arrow function to avoid passing the event object */}
         <button
-          onClick={saveChanges}
+          onClick={() => saveChanges()}
           className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded focus:outline-none focus:shadow-outline transition-all duration-150 text-sm ${
             activeTab === 'styleEditor' || activeTab === 'socialLinks' ? 'opacity-50 cursor-not-allowed' : 'opacity-100'
           }`}
