@@ -45,7 +45,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
                 handleInputChange(e);
               }}
               placeholder={t.namePlaceholder}
-              className="mt-1 block w-full rounded-md bg-gray-600 text-white border-gray-500 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full rounded-md  bg-gray-800/50 text-white border-gray-500 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
@@ -63,7 +63,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
                 handleInputChange(e);
               }}
               placeholder={t.emailPlaceholder}
-              className="mt-1 block w-full rounded-md bg-gray-600 text-white border-gray-500 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full rounded-md  bg-gray-800/50 text-white border-gray-500 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
@@ -80,7 +80,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
                 handleInputChange(e);
               }}
               placeholder={t.messagePlaceholder}
-              className="mt-1 block w-full rounded-md bg-gray-600 text-white border-gray-500 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full rounded-md  bg-gray-800/50 text-white border-gray-500 focus:ring-blue-500 focus:border-blue-500"
               rows={4}
               required
             />

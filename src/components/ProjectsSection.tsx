@@ -36,7 +36,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) =>
               <p className="text-gray-400 text-text" >{project.description}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {project.tags.map((tag, tagIndex) => (
-                  <span key={tagIndex} className="px-3 py-1 bg-blue-900 rounded-full text-sm">{tag}</span>
+                  <span key={tagIndex} className="px-3 py-1 rounded-full text-sm  bg-gray-800/50">{tag}</span>
                 ))}
               </div>
             </>
@@ -55,7 +55,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) =>
             </a>
           ) : (
              // Added shadow-lg
-            <div key={index} className="bg-gray-800 rounded-lg p-6 shadow-lg" >
+            <div key={index} className="rounded-lg p-6 shadow-lg sectionbg" >
               {ProjectContent}
             </div>
           );
