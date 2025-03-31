@@ -293,7 +293,11 @@ const MainSite = () => {
 
       {/* Use text-secondary for footer text */}
       <footer className="container mx-auto px-4 py-8 text-center">
-        <p className="text-secondary">{t.generalInfo.footerText}</p>
+        <p className="text-secondary mb-4">{t.generalInfo.footerText}</p>
+        {/* Add link to Admin Dashboard */}
+        <Link to="/admin/dashboard" className="text-sm text-primary hover:text-text underline">
+          Admin Dashboard
+        </Link>
       </footer>
     </div>
   );
