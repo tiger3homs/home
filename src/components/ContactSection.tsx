@@ -28,8 +28,8 @@ const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formDa
        // Use unified CSS variable
     >
       {/* Added background, padding, rounding, and shadow to the form container div */}
-      <div className="max-w-3xl mx-auto bg-gray-900 p-8 rounded-lg shadow-lg" style={{ backgroundColor: 'var(--section-bg-color)' }}>
-        <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'var(--title-color)' }}>{t.title}</h2>
+      <div className="sectionbg max-w-3xl mx-auto p-8 rounded-lg shadow-lg " >
+        <h2 className="text-3xl font-bold text-center mb-8 " style={{ color: 'var(--title-color)' }}>{t.title}</h2>
         <form onSubmit={handleSubmit} className="mt-8" >
           <div className="mb-4">
             <label htmlFor="name" className="block text-sm font-medium text-gray-300" style={{ color: 'var(--h3title-color)' }}>

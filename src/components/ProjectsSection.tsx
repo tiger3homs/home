@@ -48,8 +48,8 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) =>
               href={project.link}
               target="_blank"
               rel="noopener noreferrer"
-              // Added base shadow-lg
-              className="block bg-gray-800 rounded-lg p-6 shadow-lg hover:bg-gray-700 transition-colors hover:shadow-xl" 
+              // Added base shadow-lg and sectionbg class
+              className="block rounded-lg p-6 shadow-lg hover:bg-gray-700 transition-colors hover:shadow-xl sectionbg"
             >
               {ProjectContent}
             </a>
