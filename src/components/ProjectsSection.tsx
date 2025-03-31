@@ -15,7 +15,8 @@ interface ProjectsSectionProps {
 
 const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) => {
   return (
-    <section className="container mx-auto px-4 py-16">
+    // Added shadow-xl and rounded-lg to the main section
+    <section className="container mx-auto px-4 py-16 rounded-lg shadow-xl">
       <h2 className="text-3xl font-bold text-center mb-12" style={{ color: 'var(--title-color)' }}>{title}</h2>
       <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {projects.map((project, index) => {
@@ -41,15 +42,17 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) =>
           return project.link ? (
             <a 
               key={index} 
-              href={project.link} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="block bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors hover:shadow-lg"
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              // Added base shadow-lg
+              className="block bg-gray-800 rounded-lg p-6 shadow-lg hover:bg-gray-700 transition-colors hover:shadow-xl" 
             >
               {ProjectContent}
             </a>
           ) : (
-            <div key={index} className="bg-gray-800 rounded-lg p-6">
+             // Added shadow-lg
+            <div key={index} className="bg-gray-800 rounded-lg p-6 shadow-lg">
               {ProjectContent}
             </div>
           );

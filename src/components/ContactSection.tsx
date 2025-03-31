@@ -22,8 +22,10 @@ interface ContactSectionProps {
 
 const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formData, handleInputChange }) => {
   return (
-    <section className="container mx-auto px-4 py-16 bg-gray-800/50">
-      <div className="max-w-3xl mx-auto">
+    // Added shadow-xl and rounded-lg to the main section
+    <section className="container mx-auto px-4 py-16 bg-gray-800/50 rounded-lg shadow-xl">
+      {/* Added background, padding, rounding, and shadow to the form container div */}
+      <div className="max-w-3xl mx-auto bg-gray-900 p-8 rounded-lg shadow-lg">
         <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'var(--title-color)' }}>{t.title}</h2>
         <form onSubmit={handleSubmit} className="mt-8">
           <div className="mb-4">
