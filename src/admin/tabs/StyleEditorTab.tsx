@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore'; // Restore Firestore imports
+import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc } from 'firebase/firestore'; // Add collection, getDocs, addDoc, deleteDoc
 import chroma from 'chroma-js'; // Import chroma-js
 import { db } from '../../firebaseConfig'; // Import Firestore instance
 import { translations } from '../../translations'; // Import translations object
@@ -14,6 +14,13 @@ interface StyleData {
   textColor?: string; // Added optional textColor
   backgroundFromColor?: string; // Added background start color
   backgroundToColor?: string; // Added background end color
+}
+
+// Interface for a saved theme document
+interface SavedTheme {
+  id: string; // Firestore document ID
+  name: string;
+  style: StyleData;
 }
 
 interface StyleEditorTabProps {
@@ -46,6 +53,9 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [aiMode, setAiMode] = useState(0); // 0: Complementary, 1: Analogous, 2: Triadic
+  const [savedThemes, setSavedThemes] = useState<SavedTheme[]>([]); // State for saved themes
+  const [newThemeName, setNewThemeName] = useState(''); // State for new theme name input
+  const [isLoadingThemes, setIsLoadingThemes] = useState(true); // Loading state for themes
 
   // --- Optimized Input Change Handlers ---
   const isValidHexColor = (color: string): boolean => /^#[0-9A-F]{6}$/i.test(color);
@@ -74,75 +84,80 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
 
   // Firestore document reference will be created inside useEffect now
 
-  // Restore Effect to load styles from Firestore on mount
-  useEffect(() => {
-    // Check if db instance is ready first
+  // --- Load Initial Styles and Themes ---
+  const loadInitialData = useCallback(async () => {
     if (!db) {
-      console.error("loadStyles Effect: Firestore db instance is not available.");
-      setIsLoading(false); // Can't load if db is missing
-      return; // Exit effect if db is not ready
+      console.error("Load Data Error: Firestore db instance is not available.");
+      setIsLoading(false);
+      setIsLoadingThemes(false);
+      return;
+    }
+    setIsLoading(true);
+    setIsLoadingThemes(true);
+
+    // Load Current Styles (from settings/styles)
+    const stylesDocRef = doc(db, 'settings', 'styles');
+    try {
+      const docSnap = await getDoc(stylesDocRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data() as StyleData;
+        setPrimaryColor(data.primaryColor || defaultStyles.primaryColor);
+        setSecondaryColor(data.secondaryColor || defaultStyles.secondaryColor);
+        setFontFamily(data.fontFamily || defaultStyles.fontFamily);
+        setTitleColor(data.titleColor || defaultStyles.titleColor || '#ffffff');
+        setH3TitleColor(data.h3TitleColor || defaultStyles.h3TitleColor || '#d7e3ee');
+        setTextColor(data.textColor || defaultStyles.textColor || '#c6d3e2');
+        setBackgroundFromColor(data.backgroundFromColor ?? defaultStyles.backgroundFromColor ?? '#111827');
+        setBackgroundToColor(data.backgroundToColor ?? defaultStyles.backgroundToColor ?? '#1F2937');
+      } else {
+        console.log("No current style document found, using defaults.");
+        // Apply defaults if no saved style
+        handleResetToDefaults(); // Use reset function to apply defaults
+      }
+    } catch (error) {
+      console.error("Error loading current styles:", error);
+      alert('Failed to load current styles.');
+      handleResetToDefaults(); // Fallback to defaults on error
+    } finally {
+      setIsLoading(false);
     }
 
-    // Create docRef inside the effect, now that we know db is available
-    const stylesDocRefInsideEffect = doc(db, 'settings', 'styles');
-    console.log('loadStyles Effect: Created stylesDocRefInsideEffect:', stylesDocRefInsideEffect.path);
-
-    const loadStyles = async () => {
-      setIsLoading(true);
-      // No need for null check on stylesDocRefInsideEffect here
-      console.log('loadStyles Function: Attempting getDoc...'); // Log inside async function
-      try {
-        const docSnap = await getDoc(stylesDocRefInsideEffect); // Use the ref created in the effect
-        console.log('loadStyles Function: getDoc finished.'); // Log after getDoc
-        if (docSnap.exists()) {
-          console.log('loadStyles Function: Document exists. Data:', docSnap.data()); // Log if doc exists
-          const data = docSnap.data() as StyleData;
-          // Use defaultStyles for fallbacks
-          setPrimaryColor(data.primaryColor || defaultStyles.primaryColor);
-          setSecondaryColor(data.secondaryColor || defaultStyles.secondaryColor);
-          setFontFamily(data.fontFamily || defaultStyles.fontFamily);
-          setTitleColor(data.titleColor || defaultStyles.titleColor || '#ffffff'); // Double fallback for safety
-          setH3TitleColor(data.h3TitleColor || defaultStyles.h3TitleColor || '#d7e3ee');
-          setTextColor(data.textColor || defaultStyles.textColor || '#c6d3e2');
-          // Ensure setting state uses defaults if Firestore data is missing, providing guaranteed string default
-          setBackgroundFromColor(data.backgroundFromColor ?? defaultStyles.backgroundFromColor ?? '#111827');
-          setBackgroundToColor(data.backgroundToColor ?? defaultStyles.backgroundToColor ?? '#1F2937');
+    // Load Saved Themes (from themes collection)
+    const themesCollectionRef = collection(db, 'themes');
+    try {
+      const querySnapshot = await getDocs(themesCollectionRef);
+      const loadedThemes: SavedTheme[] = [];
+      querySnapshot.forEach((doc) => {
+        // Type assertion might be needed depending on Firestore rules/data structure
+        const data = doc.data() as { name: string; style: StyleData };
+        if (data.name && data.style) { // Basic validation
+            loadedThemes.push({ id: doc.id, ...data });
         } else {
-          console.log("loadStyles Function: No style document found, using defaults from defaultStyles object.");
-          // Set state to defaults if no document exists
-          setPrimaryColor(defaultStyles.primaryColor);
-          setSecondaryColor(defaultStyles.secondaryColor);
-          setFontFamily(defaultStyles.fontFamily);
-          setTitleColor(defaultStyles.titleColor ?? '#ffffff');
-          setH3TitleColor(defaultStyles.h3TitleColor ?? '#d7e3ee');
-          setTextColor(defaultStyles.textColor ?? '#c6d3e2');
-          // Ensure setting state uses guaranteed string defaults
-          setBackgroundFromColor(defaultStyles.backgroundFromColor ?? '#111827');
-          setBackgroundToColor(defaultStyles.backgroundToColor ?? '#1F2937');
-          // Optionally save defaults if not found
-          // await setDoc(stylesDocRefInsideEffect, { primaryColor, secondaryColor, fontFamily, titleColor, h3TitleColor, textColor });
+            console.warn(`Theme document ${doc.id} has invalid data:`, data);
         }
-      } catch (error) {
-        console.error("loadStyles Function: Error during getDoc or processing:", error); // More specific error log
-        alert('Failed to load styles.'); // User feedback
-      } finally {
-        console.log('loadStyles Function: Setting isLoading to false.'); // Log before setting loading false
-        setIsLoading(false); // Set loading false after attempt
-      }
-    };
+      });
+      setSavedThemes(loadedThemes.sort((a, b) => a.name.localeCompare(b.name))); // Sort themes by name
+      console.log("Loaded themes:", loadedThemes);
+    } catch (error) {
+      console.error("Error loading saved themes:", error);
+      alert('Failed to load saved themes.');
+      setSavedThemes([]); // Clear themes on error
+    } finally {
+      setIsLoadingThemes(false);
+    }
+  }, [db]); // Dependency on db
 
-    loadStyles();
-    // Effect depends on the db instance now.
-    // If db changes (unlikely but possible), this effect re-runs.
-  }, [db]); // Update dependency array to db
-
-  // Restore Effect to update CSS variables when state changes
+  // Effect to load data on mount
   useEffect(() => {
-    // Keep this effect as it was working
-    if (!isLoading) {
-    // Ensure colors are valid before setting CSS variables, use defaultStyles for fallbacks
-    const validPrimary = primaryColor.match(/^#[0-9A-F]{6}$/i) ? primaryColor : defaultStyles.primaryColor;
-    const validSecondary = secondaryColor.match(/^#[0-9A-F]{6}$/i) ? secondaryColor : defaultStyles.secondaryColor;
+    loadInitialData();
+  }, [loadInitialData]); // Use the useCallback function
+
+  // Effect to update CSS variables when state changes (no changes needed here)
+  useEffect(() => {
+    if (!isLoading) { // Only update CSS if initial styles have loaded
+      // Ensure colors are valid before setting CSS variables, use defaultStyles for fallbacks
+      const validPrimary = primaryColor.match(/^#[0-9A-F]{6}$/i) ? primaryColor : defaultStyles.primaryColor;
+      const validSecondary = secondaryColor.match(/^#[0-9A-F]{6}$/i) ? secondaryColor : defaultStyles.secondaryColor;
     const validTitle = titleColor.match(/^#[0-9A-F]{6}$/i) ? titleColor : (defaultStyles.titleColor ?? '#ffffff');
     const validH3Title = h3TitleColor.match(/^#[0-9A-F]{6}$/i) ? h3TitleColor : (defaultStyles.h3TitleColor ?? '#d7e3ee');
     const validText = textColor.match(/^#[0-9A-F]{6}$/i) ? textColor : (defaultStyles.textColor ?? '#c6d3e2');
@@ -210,8 +225,9 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     }
   };
 
-  // --- Add Reset Function ---
+  // --- Reset Function (Modified slightly for clarity) ---
   const handleResetToDefaults = () => {
+    console.log("Resetting styles to default values.");
     // Reset state directly using the defaultStyles constant object
     setPrimaryColor(defaultStyles.primaryColor);
     setSecondaryColor(defaultStyles.secondaryColor);
@@ -322,17 +338,117 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
   };
   // --- End AI Color Generation ---
 
-  // Keep isLoading check for rendering
-  if (isLoading) {
-    return <div>Loading styles...</div>; // Loading indicator
+
+  // --- Theme Management Handlers ---
+
+  const handleApplyTheme = (theme: SavedTheme) => {
+    console.log("Applying theme:", theme.name);
+    const { style } = theme;
+    // Apply theme styles to the current state
+    setPrimaryColor(style.primaryColor || defaultStyles.primaryColor);
+    setSecondaryColor(style.secondaryColor || defaultStyles.secondaryColor);
+    setFontFamily(style.fontFamily || defaultStyles.fontFamily);
+    setTitleColor(style.titleColor || defaultStyles.titleColor || '#ffffff');
+    setH3TitleColor(style.h3TitleColor || defaultStyles.h3TitleColor || '#d7e3ee');
+    setTextColor(style.textColor || defaultStyles.textColor || '#c6d3e2');
+    setBackgroundFromColor(style.backgroundFromColor ?? defaultStyles.backgroundFromColor ?? '#111827');
+    setBackgroundToColor(style.backgroundToColor ?? defaultStyles.backgroundToColor ?? '#1F2937');
+    // Note: This only changes the editor state. User needs to click "Save Styles"
+    // to make this the active style in 'settings/styles'.
+  };
+
+  const handleSaveCurrentTheme = async () => {
+    if (!db) {
+      alert("Error: Firestore not available.");
+      return;
+    }
+    if (!newThemeName.trim()) {
+      alert("Please enter a name for the theme.");
+      return;
+    }
+    // Check if theme name already exists
+    if (savedThemes.some(theme => theme.name.toLowerCase() === newThemeName.trim().toLowerCase())) {
+        alert(`A theme named "${newThemeName.trim()}" already exists. Please choose a different name.`);
+        return;
+    }
+
+
+    const currentStyle: StyleData = {
+      primaryColor,
+      secondaryColor,
+      fontFamily,
+      titleColor,
+      h3TitleColor,
+      textColor,
+      backgroundFromColor,
+      backgroundToColor,
+    };
+
+    setIsSaving(true); // Use isSaving state to indicate activity
+    console.log(`Saving current style as new theme: "${newThemeName.trim()}"`);
+    try {
+      const themesCollectionRef = collection(db, 'themes');
+      const newThemeDoc = await addDoc(themesCollectionRef, {
+        name: newThemeName.trim(),
+        style: currentStyle,
+      });
+      console.log("New theme saved with ID:", newThemeDoc.id);
+      // Add the new theme to the local state immediately
+      const newTheme: SavedTheme = { id: newThemeDoc.id, name: newThemeName.trim(), style: currentStyle };
+      setSavedThemes(prevThemes => [...prevThemes, newTheme].sort((a, b) => a.name.localeCompare(b.name)));
+      setNewThemeName(''); // Clear the input field
+      alert(`Theme "${newTheme.name}" saved successfully!`);
+    } catch (error) {
+      console.error("Error saving new theme:", error);
+      alert(`Failed to save theme. Error: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteTheme = async (themeId: string, themeName: string) => {
+    if (!db) {
+      alert("Error: Firestore not available.");
+      return;
+    }
+    // Confirmation dialog
+    if (!window.confirm(`Are you sure you want to delete the theme "${themeName}"? This cannot be undone.`)) {
+        return;
+    }
+
+    setIsSaving(true); // Indicate activity
+    console.log(`Attempting to delete theme: ${themeName} (ID: ${themeId})`);
+    try {
+      const themeDocRef = doc(db, 'themes', themeId);
+      await deleteDoc(themeDocRef);
+      console.log(`Theme "${themeName}" deleted successfully.`);
+      // Remove the theme from local state
+      setSavedThemes(prevThemes => prevThemes.filter(theme => theme.id !== themeId));
+      alert(`Theme "${themeName}" deleted.`);
+    } catch (error) {
+      console.error(`Error deleting theme ${themeName}:`, error);
+      alert(`Failed to delete theme "${themeName}". Error: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // --- End Theme Management Handlers ---
+
+
+  // Combined loading state check
+  if (isLoading || isLoadingThemes) {
+    return <div>Loading styles and themes...</div>;
   }
 
-  // --- Return JSX - Keep this structure ---
+  // --- Return JSX ---
   return (
-    <div>
-      <h4 className="text-lg font-medium mb-4">Style Editor</h4> {/* Restore original title */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6"> {/* Main Grid Layout */}
 
-      <div className="space-y-4">
+      {/* Column 1: Style Editor Controls */}
+      <div className="md:col-span-2 space-y-4"> {/* Editor takes 2 columns on medium screens */}
+        <h4 className="text-lg font-medium mb-4">Style Editor</h4>
+
         {/* Primary Color */}
         <div>
           <label htmlFor="primaryColorText" className="block text-sm font-medium text-gray-700 mb-1">
@@ -587,17 +703,84 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
           >
             Reset to Defaults
           </button>
-          {/* Add AI Generate Button */}
+          {/* AI Generate Button */}
           <button
             onClick={handleGenerateAIColors}
-            disabled={isSaving || isLoading} // Also disable during save/load
-            className={`px-4 py-2 bg-purple-600 text-white font-medium rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${isSaving || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isSaving || isLoading || isLoadingThemes}
+            className={`px-4 py-2 bg-purple-600 text-white font-medium rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${isSaving || isLoading || isLoadingThemes ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             Generate Colors
           </button>
         </div>
-      </div>
-    </div>
+      </div> {/* End Column 1 */}
+
+
+      {/* Column 2: Theme History */}
+      <div className="md:col-span-1 space-y-4"> {/* Theme history takes 1 column */}
+        <h4 className="text-lg font-medium mb-4">Theme History</h4>
+
+        {/* Save Current Theme Section */}
+        <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
+          <label htmlFor="newThemeName" className="block text-sm font-medium text-gray-700 mb-1">
+            Save Current Style as Theme
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              id="newThemeName"
+              value={newThemeName}
+              onChange={(e) => setNewThemeName(e.target.value)}
+              className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="Enter theme name"
+              disabled={isSaving}
+            />
+            <button
+              onClick={handleSaveCurrentTheme}
+              disabled={isSaving || !newThemeName.trim()}
+              className={`px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${isSaving || !newThemeName.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              Save Theme
+            </button>
+          </div>
+        </div>
+
+        {/* Saved Themes List */}
+        <div>
+          <h5 className="text-md font-medium mb-2">Saved Themes</h5>
+          {savedThemes.length === 0 ? (
+            <p className="text-sm text-gray-500">No themes saved yet.</p>
+          ) : (
+            <ul className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-md p-2 bg-white">
+              {savedThemes.map((theme) => (
+                <li key={theme.id} className="flex items-center justify-between p-2 border-b border-gray-100 last:border-b-0">
+                  <span className="text-sm font-medium text-gray-800">{theme.name}</span>
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => handleApplyTheme(theme)}
+                      disabled={isSaving}
+                      className={`px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50`}
+                      title="Apply this theme to the editor"
+                    >
+                      Apply
+                    </button>
+                    {/* Add Rename button later if needed */}
+                    <button
+                      onClick={() => handleDeleteTheme(theme.id, theme.name)}
+                      disabled={isSaving}
+                      className={`px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50`}
+                      title="Delete this theme permanently"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div> {/* End Column 2 */}
+
+    </div> /* End Main Grid */
   );
 };
 

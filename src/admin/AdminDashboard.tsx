@@ -418,6 +418,23 @@ const AdminDashboard: React.FC = () => {
               handleDeleteItem
             )
           )}
+          {/* If generalInfo is active, also render About section content */}
+          {activeTab === 'generalInfo' && translations.en.about && (
+            <>
+              <h4 className="text-lg font-semibold mt-6 mb-3 text-gray-600 capitalize">
+                {getStaticSectionName('about')} Content (Merged)
+              </h4>
+              {renderFields(
+                translations.en.about,
+                ['about'], // Path for the about section data
+                handleInputChange,
+                editingPath,
+                setEditingPath,
+                undefined,
+                handleDeleteItem
+              )}
+            </>
+          )}
         </>
       );
     }
@@ -451,8 +468,8 @@ const AdminDashboard: React.FC = () => {
       {/* Tabs Navigation */}
       <div className="mb-6 border-b border-gray-300">
         <nav className="-mb-px flex space-x-4 sm:space-x-6 overflow-x-auto pb-px" aria-label="Tabs">
-          {/* Render tabs in specific order */}
-          {['generalInfo', 'socialLinks', 'projects', 'about', 'services', 'contact', 'styleEditor'].map((key) => {
+          {/* Render tabs in specific order (Removed 'about') */}
+          {['generalInfo', 'socialLinks', 'projects', 'services', 'contact', 'styleEditor'].map((key) => {
             let tabTitle: string;
             let isStatic = false;
 
