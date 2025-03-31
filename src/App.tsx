@@ -82,6 +82,7 @@ const MainSite = () => {
   // State for translations, initialized with defaults, fetched from Firestore
   const [siteTranslations, setSiteTranslations] = useState<TranslationsType>(defaultTranslations);
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(true); // Loading state for translations
+  const [isAdminLinkVisible, setIsAdminLinkVisible] = useState(false); // State for admin link visibility
 
   // Fetch translations from Firestore in real-time
   useEffect(() => {
@@ -117,6 +118,24 @@ const MainSite = () => {
     // Cleanup listener on unmount
     return () => unsubscribe();
   }, []); // Empty dependency array ensures this runs only on mount
+
+  // Effect to listen for key combination to toggle admin link
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Ctrl + Alt + A
+      if (event.ctrlKey && event.altKey && event.key === 'a') {
+        event.preventDefault(); // Prevent default browser behavior (like opening menus)
+        setIsAdminLinkVisible(prev => !prev);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup listener on component unmount
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []); // Empty dependency array ensures this runs only once
 
   // Memoize the 'en' translations object
   const t = useMemo(() => siteTranslations.en, [siteTranslations]);
@@ -291,11 +310,14 @@ const MainSite = () => {
         />
       </Suspense>
 
-      {/* Use text-secondary for footer text */}
-      <footer className="container mx-auto px-4 py-8 text-center">
+      {/* Footer - Removed 'group' class */}
+      <footer className="container mx-auto px-4 py-8 text-center relative"> {/* Removed group */}
         <p className="text-secondary mb-4">{t.generalInfo.footerText}</p>
-        {/* Add link to Admin Dashboard */}
-        <Link to="/admin/dashboard" className="text-sm text-primary hover:text-text underline">
+        {/* Admin Dashboard link - visibility controlled by state */}
+        <Link
+          to="/admin/dashboard"
+          className={`absolute bottom-2 left-1/2 -translate-x-1/2 text-sm text-primary hover:text-text underline transition-opacity duration-300 ${isAdminLinkVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} // Use state for opacity and disable pointer events when hidden
+        >
           Admin Dashboard
         </Link>
       </footer>
