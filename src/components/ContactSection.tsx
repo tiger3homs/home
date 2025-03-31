@@ -22,12 +22,15 @@ interface ContactSectionProps {
 
 const ContactSection: React.FC<ContactSectionProps> = ({ t, handleSubmit, formData, handleInputChange }) => {
   return (
-    // Added shadow-xl and rounded-lg to the main section
-    <section className="container mx-auto px-4 py-16 bg-gray-800/50 rounded-lg shadow-xl">
+    // Added shadow-xl, rounded-lg, and background color using the unified CSS variable
+    <section
+      className="container mx-auto px-4 py-16 rounded-lg shadow-xl bg-gray-800/50 backdrop-blur-sm" // Removed bg-gray-800/50
+       // Use unified CSS variable
+    >
       {/* Added background, padding, rounding, and shadow to the form container div */}
-      <div className="max-w-3xl mx-auto bg-gray-900 p-8 rounded-lg shadow-lg">
+      <div className="max-w-3xl mx-auto bg-gray-900 p-8 rounded-lg shadow-lg" style={{ backgroundColor: 'var(--section-bg-color)' }}>
         <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'var(--title-color)' }}>{t.title}</h2>
-        <form onSubmit={handleSubmit} className="mt-8">
+        <form onSubmit={handleSubmit} className="mt-8" >
           <div className="mb-4">
             <label htmlFor="name" className="block text-sm font-medium text-gray-300" style={{ color: 'var(--h3title-color)' }}>
               {t.nameLabel}

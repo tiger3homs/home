@@ -15,18 +15,21 @@ interface ProjectsSectionProps {
 
 const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) => {
   return (
-    // Added shadow-xl and rounded-lg to the main section
-    <section className="container mx-auto px-4 py-16 rounded-lg shadow-xl">
+    // Added shadow-xl, rounded-lg, and background color using the unified CSS variable
+    <section
+      className="container mx-auto px-4 py-16 rounded-lg shadow-xl"
+     // Use unified CSS variable
+    >
       <h2 className="text-3xl font-bold text-center mb-12" style={{ color: 'var(--title-color)' }}>{title}</h2>
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto"  > 
         {projects.map((project, index) => {
           const ProjectContent = (
             <>
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start mb-4 ">
                 <Code2 className="text-blue-400" size={24} />
                 {/* Link icon if link exists */}
                 {project.link && (
-                  <ExternalLink size={20} className="text-gray-500" />
+                  <ExternalLink size={20} className="text-gray-500 "  />
                 )}
               </div>
               <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--h3title-color)' }}>{project.title}</h3>
@@ -52,7 +55,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, title }) =>
             </a>
           ) : (
              // Added shadow-lg
-            <div key={index} className="bg-gray-800 rounded-lg p-6 shadow-lg">
+            <div key={index} className="bg-gray-800 rounded-lg p-6 shadow-lg" >
               {ProjectContent}
             </div>
           );

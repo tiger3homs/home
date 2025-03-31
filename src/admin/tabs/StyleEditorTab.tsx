@@ -14,6 +14,7 @@ interface StyleData {
   textColor?: string; // Added optional textColor
   backgroundFromColor?: string; // Added background start color
   backgroundToColor?: string; // Added background end color
+  sectionBgColor?: string; // Unified background for content sections
 }
 
 // Interface for a saved theme document
@@ -37,6 +38,8 @@ const defaultStyles: StyleData = {
   textColor: '#c6d3e2',
   backgroundFromColor: '#111827', // Default approx gray-900
   backgroundToColor: '#1F2937', // Default approx gray-800
+  // Unified default section background
+  sectionBgColor: '#374151', // gray-700
 };
 
 const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
@@ -50,6 +53,8 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
   // Explicitly type state as string and initialize with guaranteed string default
   const [backgroundFromColor, setBackgroundFromColor] = useState<string>(defaultStyles.backgroundFromColor ?? '#111827');
   const [backgroundToColor, setBackgroundToColor] = useState<string>(defaultStyles.backgroundToColor ?? '#1F2937');
+  // Unified state for section background
+  const [sectionBgColor, setSectionBgColor] = useState<string>(defaultStyles.sectionBgColor ?? '#374151');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [aiMode, setAiMode] = useState(0); // 0: Complementary, 1: Analogous, 2: Triadic
@@ -109,6 +114,8 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
         setTextColor(data.textColor || defaultStyles.textColor || '#c6d3e2');
         setBackgroundFromColor(data.backgroundFromColor ?? defaultStyles.backgroundFromColor ?? '#111827');
         setBackgroundToColor(data.backgroundToColor ?? defaultStyles.backgroundToColor ?? '#1F2937');
+        // Load unified section background
+        setSectionBgColor(data.sectionBgColor ?? defaultStyles.sectionBgColor ?? '#374151');
       } else {
         console.log("No current style document found, using defaults.");
         // Apply defaults if no saved style
@@ -179,8 +186,16 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     // State variables are now guaranteed strings, so direct assignment is safe
     document.documentElement.style.setProperty('--background-from-color', validBgFrom);
     document.documentElement.style.setProperty('--background-to-color', validBgTo);
+    // Set unified section background CSS variable
+    const validSectionBg = sectionBgColor.match(/^#[0-9A-F]{6}$/i) ? sectionBgColor : (defaultStyles.sectionBgColor ?? '#374151');
+    document.documentElement.style.setProperty('--section-bg-color', validSectionBg);
   }
-  }, [primaryColor, secondaryColor, fontFamily, titleColor, h3TitleColor, textColor, backgroundFromColor, backgroundToColor, isLoading]); // Add new dependencies
+  }, [
+      primaryColor, secondaryColor, fontFamily, titleColor, h3TitleColor, textColor,
+      backgroundFromColor, backgroundToColor,
+      sectionBgColor, // Use unified state
+      isLoading
+  ]);
 
 
   // Restore handleSaveStyles function with added logging
@@ -209,7 +224,9 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
         h3TitleColor,
         textColor,
         backgroundFromColor,
-        backgroundToColor
+        backgroundToColor,
+        // Add unified section background to save data
+        sectionBgColor
     };
     console.log('Attempting to save styles to Firestore:', stylesToSave);
     try {
@@ -238,6 +255,8 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     // Ensure reset uses guaranteed string defaults
     setBackgroundFromColor(defaultStyles.backgroundFromColor ?? '#111827');
     setBackgroundToColor(defaultStyles.backgroundToColor ?? '#1F2937');
+    // Reset unified section background
+    setSectionBgColor(defaultStyles.sectionBgColor ?? '#374151');
 
     // Optionally, provide user feedback
     // alert('Styles reset to defaults. Click Save Styles to persist.');
@@ -353,6 +372,8 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
     setTextColor(style.textColor || defaultStyles.textColor || '#c6d3e2');
     setBackgroundFromColor(style.backgroundFromColor ?? defaultStyles.backgroundFromColor ?? '#111827');
     setBackgroundToColor(style.backgroundToColor ?? defaultStyles.backgroundToColor ?? '#1F2937');
+    // Apply unified section background from theme
+    setSectionBgColor(style.sectionBgColor ?? defaultStyles.sectionBgColor ?? '#374151');
     // Note: This only changes the editor state. User needs to click "Save Styles"
     // to make this the active style in 'settings/styles'.
   };
@@ -382,6 +403,8 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
       textColor,
       backgroundFromColor,
       backgroundToColor,
+      // Add unified section background to theme data
+      sectionBgColor,
     };
 
     setIsSaving(true); // Use isSaving state to indicate activity
@@ -652,10 +675,36 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
         </div>
         {/* End Background Gradient Colors */}
 
+        {/* --- Unified Section Background Color --- */}
+        <div>
+          <label htmlFor="sectionBgColorText" className="block text-sm font-medium text-gray-700 mb-1">
+            Section Background Color
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              id="sectionBgColorPicker"
+              value={sectionBgColor.match(/^#[0-9A-F]{6}$/i) ? sectionBgColor : (defaultStyles.sectionBgColor ?? '#374151')}
+              onChange={handleColorPickerChange(setSectionBgColor)}
+              className="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              id="sectionBgColorText"
+              value={sectionBgColor}
+              onChange={handleColorTextChange(setSectionBgColor)}
+              className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="#rrggbb"
+              maxLength={7}
+            />
+          </div>
+        </div>
+        {/* --- End Unified Section Background Color --- */}
 
-        {/* Preview Section - Updated with Translations */}
+
+        {/* Preview Section - Updated with Translations and Unified Section Background */}
         <div
-          className="p-4 md:p-6 border border-gray-300 text-white rounded-lg shadow-lg"
+          className="mt-6 p-4 md:p-6 border border-gray-300 text-white rounded-lg shadow-lg"
           style={{ background: `linear-gradient(to bottom right, ${backgroundFromColor}, ${backgroundToColor})` }}
         >
             <h5 className="text-md font-medium mb-3">Preview</h5>
@@ -679,9 +728,28 @@ const StyleEditorTab: React.FC<StyleEditorTabProps> = () => {
                   </h3>
 
                 {/* About Description using Text Color */}
-                <p style={{ color: textColor }} className="text-center mb-12">
+                <p style={{ color: textColor }} className="text-center mb-6"> {/* Reduced margin */}
                     {translations.en.projects.project1.description}
                 </p>
+
+                {/* Unified Section Background Previews */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    {/* Projects Preview Box */}
+                    <div className="p-4 rounded-lg shadow" style={{ backgroundColor: sectionBgColor }}>
+                        <h4 style={{ color: titleColor }} className="text-lg font-semibold mb-2 text-center">Projects Area</h4>
+                        <p style={{ color: textColor }} className="text-sm text-center">Background: {sectionBgColor}</p>
+                    </div>
+                    {/* Services Preview Box */}
+                    <div className="p-4 rounded-lg shadow" style={{ backgroundColor: sectionBgColor }}>
+                        <h4 style={{ color: titleColor }} className="text-lg font-semibold mb-2 text-center">Services Area</h4>
+                        <p style={{ color: textColor }} className="text-sm text-center">Background: {sectionBgColor}</p>
+                    </div>
+                    {/* Contact Preview Box */}
+                    <div className="p-4 rounded-lg shadow" style={{ backgroundColor: sectionBgColor }}>
+                        <h4 style={{ color: titleColor }} className="text-lg font-semibold mb-2 text-center">Contact Area</h4>
+                        <p style={{ color: textColor }} className="text-sm text-center">Background: {sectionBgColor}</p>
+                    </div>
+                </div>
 
             </div>
          </div>

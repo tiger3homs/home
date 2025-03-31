@@ -264,7 +264,7 @@ const MainSite = () => {
         />
       </Suspense>
 
-      <section className="container mx-auto px-4 py-16 bg-gray-800/50 backdrop-blur-sm">
+      <section className="container mx-auto px-4 py-16 bg-gray-800/50 backdrop-blur-sm" >
         <div className="max-w-3xl mx-auto">
           {/* Use text-primary for the About title */}
           <h2 className="text-3xl font-bold text-center mb-8" style={{ color: 'var(--title-color)' }}>{t.about.title}</h2>
@@ -309,58 +309,58 @@ interface StyleData {
   textColor?: string; // Added optional textColor
   backgroundFromColor?: string; // Added background start color
   backgroundToColor?: string; // Added background end color
+  // Use unified section background color
+  sectionBgColor?: string;
 }
 
 function App() {
   const basename = '/home/';
 
   // Removed the redundant useEffect hook that loaded styles here.
-  // Re-add Effect to load and apply global styles from Firestore on initial App load
+  // Effect to load and apply global styles from Firestore in real-time
   useEffect(() => {
-    const loadAndApplyStyles = async () => {
-      if (!db) {
-        console.error("App.tsx: Firestore not initialized correctly for loading styles.");
-        return; // Exit if db is not available
-      }
-      const stylesDocRef = doc(db, 'settings', 'styles');
-      try {
-        console.log("App.tsx: Attempting to load global styles...");
-        const docSnap = await getDoc(stylesDocRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data() as StyleData;
-          // Apply fetched styles to the root element
-          document.documentElement.style.setProperty('--primary-color', data.primaryColor);
-          document.documentElement.style.setProperty('--secondary-color', data.secondaryColor);
-          document.documentElement.style.setProperty('--font-family', data.fontFamily);
-          // Apply new colors if they exist in Firestore
-          if (data.titleColor) {
-            document.documentElement.style.setProperty('--title-color', data.titleColor);
-          }
-          if (data.h3TitleColor) {
-            document.documentElement.style.setProperty('--h3title-color', data.h3TitleColor);
-          }
-          if (data.textColor) {
-            document.documentElement.style.setProperty('--text-color', data.textColor);
-          }
-          // Apply background colors if they exist
-          if (data.backgroundFromColor) {
-            document.documentElement.style.setProperty('--background-from-color', data.backgroundFromColor);
-          }
-          if (data.backgroundToColor) {
-            document.documentElement.style.setProperty('--background-to-color', data.backgroundToColor);
-          }
-          console.log('App.tsx: Global styles applied from Firestore:', data);
-        } else {
-          // Styles not found in Firestore, defaults from index.css will be used.
-          console.log("App.tsx: No global styles document found in Firestore, using CSS defaults.");
-        }
-      } catch (error) {
-        console.error("App.tsx: Error loading global styles from Firestore:", error);
-        // Fallback to CSS defaults in case of error
-      }
-    };
+    if (!db) {
+      console.error("App.tsx: Firestore not initialized correctly for loading styles.");
+      return; // Exit if db is not available
+    }
+    const stylesDocRef = doc(db, 'settings', 'styles');
+    console.log("App.tsx: Setting up real-time listener for global styles...");
 
-    loadAndApplyStyles();
+    // Use onSnapshot for real-time updates
+    const unsubscribe = onSnapshot(stylesDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as StyleData;
+        console.log('App.tsx: Received style update from Firestore:', data);
+        // Apply fetched styles to the root element
+        document.documentElement.style.setProperty('--primary-color', data.primaryColor);
+        document.documentElement.style.setProperty('--secondary-color', data.secondaryColor);
+        document.documentElement.style.setProperty('--font-family', data.fontFamily);
+        // Apply other colors if they exist in Firestore, falling back to defaults if necessary
+        document.documentElement.style.setProperty('--title-color', data.titleColor || '#d7e3ee');
+        document.documentElement.style.setProperty('--h3title-color', data.h3TitleColor || '#d7e3ee');
+        document.documentElement.style.setProperty('--text-color', data.textColor || '#c6d3e2');
+        document.documentElement.style.setProperty('--background-from-color', data.backgroundFromColor || '#111827');
+        document.documentElement.style.setProperty('--background-to-color', data.backgroundToColor || '#1F2937');
+        // Apply unified section background color
+        document.documentElement.style.setProperty('--section-bg-color', data.sectionBgColor || '#374151');
+
+      } else {
+        // Styles not found in Firestore, defaults from index.css will be used.
+        // Consider explicitly setting defaults here as well for consistency
+        console.log("App.tsx: No global styles document found in Firestore, applying CSS defaults.");
+        // Optionally reset to CSS defaults if the document is deleted
+        // document.documentElement.style.setProperty('--primary-color', defaultStyles.primaryColor); // Example if you had defaultStyles defined here
+      }
+    }, (error) => {
+      console.error("App.tsx: Error listening to global styles:", error);
+      // Fallback to CSS defaults in case of error
+    });
+
+    // Cleanup listener on component unmount
+    return () => {
+      console.log("App.tsx: Unsubscribing from global styles listener.");
+      unsubscribe();
+    };
   }, []); // Empty dependency array ensures this runs only once on App mount
 
   return (
