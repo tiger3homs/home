@@ -1,4 +1,8 @@
 import React from 'react';
+import { translations as defaultTranslations } from '../translations'; // Import default translations
+
+// Define the type for the keys of the 'en' object in translations based on the imported default
+type TranslationSectionKey = keyof typeof defaultTranslations.en;
 
 // Helper function to recursively render form fields for nested objects
 export const renderFields = (
@@ -257,4 +261,19 @@ export const updateNestedState = (prevState: any, path: (string | number)[], val
    }
   current[lastKey] = value;
   return newState;
+};
+
+// Helper function to get a static display name for a section key
+export const getStaticSectionName = (key: string): string => {
+  // Simple formatting: split camelCase and capitalize
+  return key
+    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+    .replace(/^./, (str) => str.toUpperCase()); // Capitalize the first letter
+};
+
+// Type guard to check if a key is a valid TranslationSectionKey
+export const isValidTranslationKey = (key: string | null): key is TranslationSectionKey => {
+  if (key === null) return false;
+  // Check against the keys of the imported default translations
+  return key in defaultTranslations.en;
 };
